@@ -1,0 +1,23 @@
+.claude
+scratch/*
+support/private/*
+*.nextflow*
+.DS_Store
+*ipynb_checkpoints*
+*snakemake*
+.done
+*.pyc
+*snakejob*
+*snakepipe*
+*.mcr
+*.private*
+Rplots.pdf
+*.egg-info*
+slurm-*
+*wandb*
+._*
+
+# generated pipeline outputs and scratch data - reproducible via Snakemake, too large/volatile to track
+data/prep/*
+results/*
+.tmp/*

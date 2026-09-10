@@ -1,0 +1,37 @@
+name: wihttsoip
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.12
+  - pandas
+  - pyarrow>=14,<17
+  - pyranges
+  - anndata>=0.10,<0.11
+  - grpcio
+  - pysam
+  - htslib  # tabix, for indexing downloaded 1000 Genomes VCFs
+  - biopython  # required by pyfaidx to read our bgzip GENCODE fasta (alphagenome.io.fasta.FastaExtractor)
+  - duckdb  # subsetting across many batch_*.parquet files without loading them all into pandas
+  - scikit-learn  # GaussianMixture clustering of individuals by whole_score in notebooks/hbb.ipynb
+  - ipykernel
+  - nbconvert  # headless `jupyter nbconvert --execute` of notebooks/hbb.ipynb via the figures.smk rule
+  - pip
+  - pip:
+      # Vendored + patched in src/alphagenome (editable install): upstream's
+      # atlas.create() never sets grpc.max_receive_message_length, so any
+      # dense interval query response over 4MB (easy in gene-dense regions
+      # like HBB, since Atlas returns every overlapping gene before our
+      # client-side --gene-ids filter) fails with a permanent
+      # RESOURCE_EXHAUSTED that retries can never fix.
+      - -e ./src/alphagenome
+      # Local (GPU) model forward passes for personalized-sequence prediction,
+      # as opposed to the remote Atlas client above.
+      - jax[cuda12]
+      - git+https://github.com/google-deepmind/alphagenome_research.git
+      # scipy 1.18.1 (conda-forge/PyPI's current default, pulled in transitively by
+      # anndata/jax) ships a broken scipy.spatial.transform build on this platform
+      # (ImportError: cannot import name '_promote' from
+      # scipy.spatial.transform._rotation) - pin 1.15.2, the last version confirmed to
+      # actually import, so a future reinstall doesn't silently pull the broken one back in.
+      - scipy==1.15.2
