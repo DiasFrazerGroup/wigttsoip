@@ -1,6 +1,8 @@
 .claude
 scratch/*
 support/private/*
+# vendored (own git repo, editable-installed via `pip install -e ./src/alphagenome`)
+src/alphagenome
 *.nextflow*
 .DS_Store
 *ipynb_checkpoints*
@@ -21,3 +23,4 @@ slurm-*
 data/prep/*
 results/*
 .tmp/*
+notebooks/.hbb_rendered

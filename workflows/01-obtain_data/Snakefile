@@ -1,0 +1,28 @@
+configfile: "config/config.yaml"
+
+include: "rules/gencode.smk"
+include: "rules/alphagenome_atlas.smk"
+include: "rules/1000genomes.smk"
+include: "rules/alphagenome_jax.smk"
+
+rule all:
+    input:
+        # download gencode (matches AlphaGenome Atlas's own gene annotation version)
+        config["gencode"]["paths"]["gtf"],
+        config["gencode"]["paths"]["gtf_parquet"],
+
+        config["alphagenome_atlas"]["paths"]["gene_ids"],
+
+        # 1000 Genomes chr11 VCF (scoped to HBB window) - cheap, not quota-bound, safe in rule all
+        config["thousand_genomes"]["paths"]["vcf"].format(chromosome=config["thousand_genomes"]["chromosome"]),
+        config["thousand_genomes"]["paths"]["vcf"].format(chromosome=config["thousand_genomes"]["chromosome"]) + ".tbi",
+
+        # local AlphaGenome JAX weights (for 02-preprocess_data's personalized-sequence forward pass)
+        config["alphagenome_jax"]["paths"]["weights"],
+
+        # NOTE: the AlphaGenome Atlas chunk downloads (both the TSS+/-5kb dev
+        # window and the full 1Mb window) are deliberately NOT in `rule all` -
+        # they're real-time-bound by Atlas's request quota, so trigger them
+        # explicitly, e.g.:
+        #   snakemake -s workflows/01-obtain_data/Snakefile <path from config alphagenome_atlas.paths.done_small>
+        #   snakemake -s workflows/01-obtain_data/Snakefile <path from config alphagenome_atlas.paths.done_full>

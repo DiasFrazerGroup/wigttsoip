@@ -1,0 +1,149 @@
+# GENERAL
+paths:
+  RAW_DIR: "data/raw"
+  PREP_DIR: "data/prep"
+
+# DATASET SPECIFIC
+gencode:
+  # Matches the gene annotation version used by AlphaGenome / the Atlas API
+  # (versioned gene_ids like ENSG00000100365.16), per google-deepmind/alphagenome's
+  # own visualization_modality_tour.ipynb colab, which loads gencode.v46.
+  urls:
+    gtf: "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_46/gencode.v46.annotation.gtf.gz"
+  paths:
+    gtf: "data/raw/GENCODE/release_46/gencode.v46.annotation.gtf.gz"
+    gtf_parquet: "data/raw/GENCODE/release_46/gencode.v46.annotation.gtf.parquet"
+
+alphagenome_atlas:
+  # HBB (GRCh38 chr11:5,225,464-5,229,395, minus strand) windows centered on
+  # its TSS (0-based 5,229,394, i.e. the gene's higher coordinate since it's
+  # minus strand). `full` is sized to AlphaGenome's largest supported model
+  # input context (SEQUENCE_LENGTH_1MB = 1,048,576 bp); `small` is a quick
+  # TSS+/-5kb window for pipeline development, sharing the same chunk cache
+  # (see rules/alphagenome_atlas.smk) so the full-window run never
+  # re-downloads chunks the small run already fetched.
+  hbb_window:
+    chromosome: "chr11"
+    tss: 5229394
+    small:
+      start: 5224394
+      end: 5234395
+    # Matches alphagenome_genexpr.dev.window_size (16384bp, TSS +/- 8192) exactly, so the
+    # dev-scale whole-vs-sum-of-parts join (03-analysis) can actually match every variant
+    # in a dev individual's combination - `small` above is narrower (TSS +/- 5kb) and
+    # left most of that window's variants unmatched. Every chunk this needs is already
+    # cached by the full-window download (both share the same chunk_cache), so this
+    # never triggers a new download.
+    dev:
+      start: 5221202
+      end: 5237586
+    full:
+      start: 4705106
+      end: 5753682
+  # A single dense-interval chunk near HBB (gene-dense beta-globin cluster,
+  # every overlapping gene returned before the merge-time --gene-ids filter)
+  # measured ~12.8GB RSS at chunk_size_bp=16384 with GTEx-only tracks (54) -
+  # too close to OOM even with 8-16GB allocated. Now keeping all RNA_SEQ
+  # tracks (~667, ~12x more), so shrink further to keep memory bounded.
+  chunk_size_bp: 512
+  # Chunks are never merged into one big file (for the full window that would be
+  # hundreds of GB and the merge itself painfully slow) - each rule's "output" is just
+  # an empty marker inside chunk_cache once every chunk for that interval is cached.
+  # Use scripts/extract_alphagenome_atlas_genexpr.py to read a gene/region's data on demand.
+  paths:
+    gene_ids: "data/prep/alphagenome-atlas/hbb_window/gene_ids.txt"
+    chunk_cache: "data/raw/alphagenome-atlas/hbb_window/chunks"
+    done_small: "data/raw/alphagenome-atlas/hbb_window/chunks/.done_tss_pm5kb"
+    done_full: "data/raw/alphagenome-atlas/hbb_window/chunks/.done_full"
+    # Example downstream extraction: how each variant alters HBB's own expression
+    # specifically in K562 tracks, as a long-format (variant, gene, track, score,
+    # quantile) directory of zstd-compressed batch_*.parquet files (bounds peak
+    # memory - see extract_to_batches() in scripts/extract_alphagenome_atlas_genexpr.py).
+    hbb_k562_long: "results/01-obtain_data/alphagenome-atlas/hbb_window/hbb_k562_variant_effects.long"
+    # Same extraction, but over hbb_window.dev (TSS +/- 8192) - matches
+    # alphagenome_genexpr.paths.dev's window exactly, for the dev-scale 03-analysis join.
+    hbb_k562_long_dev: "results/01-obtain_data/alphagenome-atlas/hbb_window/hbb_k562_variant_effects.dev.long"
+    # Same extraction, but over every variant in the full 1,048,576bp window
+    # (once download_alphagenome_atlas_hbb_window_genexpr/.done_full has run).
+    hbb_k562_long_full: "results/01-obtain_data/alphagenome-atlas/hbb_window/hbb_k562_variant_effects.full.long"
+
+# 1000 Genomes 30x high-coverage rerelease (raw, unphased GT + annotations).
+# Only chr11 is downloaded - scoped to the HBB window, same as alphagenome_atlas above.
+thousand_genomes:
+  chromosome: "chr11"
+  urls:
+    vcf: "https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000G_2504_high_coverage/working/20201028_3202_raw_GT_with_annot/20201028_CCDG_14151_B01_GRM_WGS_2020-08-05_{chromosome}.recalibrated_variants.vcf.gz"
+  paths:
+    vcf: "data/raw/1000genomes/data_collections/1000G_2504_high_coverage/working/20201028_3202_raw_GT_with_annot/20201028_CCDG_14151_B01_GRM_WGS_2020-08-05_{chromosome}.recalibrated_variants.vcf.gz"
+
+# Local JAX weights for running the actual AlphaGenome model (as opposed to the
+# remote Atlas API above), via ~/repositories/alphagenome_research on GPU.
+alphagenome_jax:
+  urls:
+    weights: "google/alphagenome-all-folds"
+  paths:
+    weights: "data/raw/articles/Avsec2026/alphagenome_jax/all-folds"
+
+# Personalized-sequence forward passes: for real 1000 Genomes individuals, apply
+# every SNV they carry in the HBB window (unphased - no maternal/paternal split,
+# indels/SVs skipped) onto the reference sequence, run both reference and
+# personalized sequences through the local AlphaGenome model, and record the
+# predicted RNA_SEQ change per gene per track. No target/observed expression
+# data involved - pure forward-pass inference.
+alphagenome_genexpr:
+  fasta: "data/raw/GENCODE/release_46/GRCh38.primary_assembly.genome.fa.gz"
+  vcf: "data/raw/1000genomes/data_collections/1000G_2504_high_coverage/working/20201028_3202_raw_GT_with_annot/20201028_CCDG_14151_B01_GRM_WGS_2020-08-05_chr11.recalibrated_variants.vcf.gz"
+  gene_ids: "data/prep/alphagenome-atlas/hbb_window/gene_ids.txt"
+  gene_annotation: "data/raw/GENCODE/release_46/gencode.v46.annotation.gtf.parquet"
+  dev:
+    window_size: 16384      # SEQUENCE_LENGTH_16KB, TSS +/- 8192, for fast iteration
+    batch_size: 2
+  full:
+    window_size: 1048576    # SEQUENCE_LENGTH_1MB, matches alphagenome_atlas.hbb_window.full exactly
+    batch_size: 2
+  samples_dev:
+    - HG00096
+    - HG00097
+    - HG00099
+    - HG00100
+    - HG00101
+    - HG00102
+    - HG00103
+    - HG00105
+    - HG00106
+    - HG00107
+  paths:
+    dev: "results/02-preprocess_data/alphagenome/hbb_window/genexpr_personalized/dev"
+    full: "results/02-preprocess_data/alphagenome/hbb_window/genexpr_personalized/full"
+    hbb_k562_dev: "results/02-preprocess_data/alphagenome/hbb_window/hbb_k562_genexpr_personalized.dev.parquet"
+    hbb_k562_full: "results/02-preprocess_data/alphagenome/hbb_window/hbb_k562_genexpr_personalized.full.parquet"
+
+# 03-analysis: does AlphaGenome predict combinations of variants (the personalized-sequence
+# forward pass above) to differ from the naive sum of each variant's own single-variant
+# Atlas effect (i.e. superadditivity/epistasis - "is the whole greater than the sum of its
+# parts?"). Compares alphagenome_genexpr's combined HBB/K562 effects against
+# alphagenome_atlas's single-variant HBB/K562 effects.
+analysis:
+  paths:
+    # Distinct SNVs (chrom:pos:ref>alt) actually carried by the 1000 Genomes samples in
+    # scope (dev's small sample list / the full 3,202-sample cohort) - independent of any
+    # track/score data, so both paths below can consume it without depending on each other.
+    unique_variants_dev: "results/03-analysis/hbb_k562/unique_variants.dev.parquet"
+    unique_variants_full: "results/03-analysis/hbb_k562/unique_variants.full.parquet"
+    # Atlas's HBB/K562 singles scores restricted to just those unique variants - Atlas
+    # scores every possible alt allele at every position, but only a fraction is ever
+    # polymorphic in a given sample set, so the whole_vs_sum_parts join runs against this
+    # much smaller table instead of the raw Atlas extraction.
+    unique_variant_scores_dev: "results/03-analysis/hbb_k562/unique_variant_scores.dev.parquet"
+    unique_variant_scores_full: "results/03-analysis/hbb_k562/unique_variant_scores.full.parquet"
+    # gnomAD v3.1.1 allele frequency + minor allele frequency for those same unique variants.
+    unique_variant_gnomad_maf_dev: "results/03-analysis/hbb_k562/unique_variant_gnomad_maf.dev.parquet"
+    unique_variant_gnomad_maf_full: "results/03-analysis/hbb_k562/unique_variant_gnomad_maf.full.parquet"
+    whole_vs_sum_parts_dev: "results/03-analysis/hbb_k562/whole_vs_sum_parts.dev.parquet"
+    whole_vs_sum_parts_full: "results/03-analysis/hbb_k562/whole_vs_sum_parts.full.parquet"
+
+# gnomAD v3.1.1 joint sites VCF (GRCh38, matching 1000 Genomes/AlphaGenome's build),
+# already available locally (data/raw/gnomad symlink) with standard AC/AN/AF INFO fields.
+gnomad:
+  paths:
+    chr11_vcf: "data/raw/gnomad/3.1.1/vcf/genomes/gnomad.joint.v3.1.1.sites.chr11.vcf.bgz"

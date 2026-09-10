@@ -1,0 +1,14 @@
+configfile: "config/config.yaml"
+
+include: "rules/alphagenome.smk"
+
+rule all:
+    input:
+        # dev-scale personalized-sequence forward passes - cheap enough to always run
+        config["alphagenome_genexpr"]["paths"]["dev"],
+        config["alphagenome_genexpr"]["paths"]["hbb_k562_dev"],
+
+        # NOTE: predict_alphagenome_genexpr_full is deliberately NOT in rule all -
+        # it's a long-running, GPU-time-bound job over the full cohort/window, trigger
+        # it explicitly once the dev output above has been verified, e.g.:
+        #   snakemake -s workflows/02-preprocess_data/Snakefile <path from config alphagenome_genexpr.paths.full>
