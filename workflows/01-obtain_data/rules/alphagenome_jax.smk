@@ -6,7 +6,7 @@ rule download_alphagenome_jax_weights:
     output:
         weights = directory(config["alphagenome_jax"]["paths"]["weights"]),
     conda:
-        "wihttsoip"
+        "wigttsoip"
     shell:
         """
         hf download {params.weights} --local-dir {output.weights}

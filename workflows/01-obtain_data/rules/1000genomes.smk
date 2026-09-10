@@ -8,7 +8,7 @@ rule download_1000genomes_vcf:
         vcf = config["thousand_genomes"]["paths"]["vcf"],
         tbi = config["thousand_genomes"]["paths"]["vcf"] + ".tbi",
     conda:
-        "wihttsoip"
+        "wigttsoip"
     shell:
         """
         wget --user-agent="Chrome" --no-check-certificate {params.url} -O {output.vcf}

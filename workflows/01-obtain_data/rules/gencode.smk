@@ -4,7 +4,7 @@ rule download_gencode_annotation:
     output:
         gtf = config["gencode"]["paths"]["gtf"]
     conda:
-        "wihttsoip"
+        "wigttsoip"
     shell:
         """
         wget --user-agent="Chrome" --no-check-certificate {params.url} -O {output.gtf}

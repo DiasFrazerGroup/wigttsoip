@@ -27,13 +27,13 @@ rule render_hbb_notebook:
         partition = "genoa64",
         qos = "short",
     conda:
-        "wihttsoip"
+        "wigttsoip"
     shell:
         """
-        python -m ipykernel install --user --name wihttsoip --display-name wihttsoip
+        python -m ipykernel install --user --name wigttsoip --display-name wigttsoip
 
         jupyter nbconvert --to notebook --execute --inplace \
-            --ExecutePreprocessor.kernel_name=wihttsoip \
+            --ExecutePreprocessor.kernel_name=wigttsoip \
             --ExecutePreprocessor.timeout=600 \
             {input.notebook}
 

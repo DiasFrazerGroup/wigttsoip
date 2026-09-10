@@ -20,6 +20,7 @@ slurm-*
 ._*
 
 # generated pipeline outputs and scratch data - reproducible via Snakemake, too large/volatile to track
+data/raw/*
 data/prep/*
 results/*
 .tmp/*

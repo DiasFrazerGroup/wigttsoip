@@ -14,7 +14,7 @@ variants; a systematic deficit would mean saturation/antagonism.
 
 ```shell
 conda env create --file environment.yaml
-conda activate wihttsoip
+conda activate wigttsoip
 ```
 
 Also requires:

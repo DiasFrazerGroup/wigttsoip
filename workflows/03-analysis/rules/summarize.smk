@@ -19,7 +19,7 @@ rule get_unique_hbb_k562_variants_dev:
         partition = "genoa64",
         qos = "short",
     conda:
-        "wihttsoip"
+        "wigttsoip"
     shell:
         """
         python workflows/03-analysis/scripts/get_unique_variants.py \
@@ -54,7 +54,7 @@ rule get_unique_hbb_k562_variants_full:
         partition = "genoa64",
         qos = "short",
     conda:
-        "wihttsoip"
+        "wigttsoip"
     shell:
         """
         python workflows/03-analysis/scripts/get_unique_variants.py \
@@ -85,7 +85,7 @@ rule subset_hbb_k562_unique_variant_scores_dev:
         partition = "genoa64",
         qos = "short",
     conda:
-        "wihttsoip"
+        "wigttsoip"
     shell:
         """
         python workflows/03-analysis/scripts/subset_unique_variant_scores.py \
@@ -112,7 +112,7 @@ rule subset_hbb_k562_unique_variant_scores_full:
         partition = "genoa64",
         qos = "short",
     conda:
-        "wihttsoip"
+        "wigttsoip"
     shell:
         """
         python workflows/03-analysis/scripts/subset_unique_variant_scores.py \
@@ -145,7 +145,7 @@ rule annotate_hbb_k562_unique_variant_gnomad_maf_dev:
         partition = "genoa64",
         qos = "short",
     conda:
-        "wihttsoip"
+        "wigttsoip"
     shell:
         """
         python workflows/03-analysis/scripts/annotate_variants_gnomad_maf.py \
@@ -181,7 +181,7 @@ rule annotate_hbb_k562_unique_variant_gnomad_maf_full:
         partition = "genoa64",
         qos = "short",
     conda:
-        "wihttsoip"
+        "wigttsoip"
     shell:
         """
         python workflows/03-analysis/scripts/annotate_variants_gnomad_maf.py \
@@ -217,7 +217,7 @@ rule summarize_whole_vs_sum_parts_dev:
         partition = "genoa64",
         qos = "short",
     conda:
-        "wihttsoip"
+        "wigttsoip"
     shell:
         """
         python workflows/03-analysis/scripts/summarize_whole_vs_sum_parts.py \
@@ -252,7 +252,7 @@ rule summarize_whole_vs_sum_parts_full:
         partition = "genoa64",
         qos = "short",
     conda:
-        "wihttsoip"
+        "wigttsoip"
     shell:
         """
         python workflows/03-analysis/scripts/summarize_whole_vs_sum_parts.py \

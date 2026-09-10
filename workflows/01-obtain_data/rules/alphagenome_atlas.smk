@@ -64,7 +64,7 @@ rule download_alphagenome_atlas_hbb_tss_pm5kb_genexpr:
         qos = "short",
     threads: 5
     conda:
-        "wihttsoip"
+        "wigttsoip"
     retries: 3  # only unfetched chunks are re-queried on retry/resume - see chunk_cache_dir
     shell:
         """
@@ -107,7 +107,7 @@ rule extract_hbb_k562_variant_effects_long:
         partition = "genoa64",
         qos = "short",
     conda:
-        "wihttsoip"
+        "wigttsoip"
     shell:
         """
         python workflows/01-obtain_data/scripts/extract_alphagenome_atlas_genexpr.py \
@@ -151,7 +151,7 @@ rule extract_hbb_k562_variant_effects_long_dev:
         partition = "genoa64",
         qos = "short",
     conda:
-        "wihttsoip"
+        "wigttsoip"
     shell:
         """
         python workflows/01-obtain_data/scripts/extract_alphagenome_atlas_genexpr.py \
@@ -204,7 +204,7 @@ rule extract_hbb_k562_variant_effects_long_full:
         qos = "short",
     threads: 5
     conda:
-        "wihttsoip"
+        "wigttsoip"
     shell:
         """
         python workflows/01-obtain_data/scripts/extract_alphagenome_atlas_genexpr.py \
@@ -248,7 +248,7 @@ rule download_alphagenome_atlas_hbb_window_genexpr:
         qos = "marathon",  # this cluster's 7-day-max QOS; no GPU needed, network/quota-bound job
     threads: 5
     conda:
-        "wihttsoip"
+        "wigttsoip"
     retries: 3  # only unfetched chunks are re-queried on retry/resume - see chunk_cache_dir
     shell:
         """

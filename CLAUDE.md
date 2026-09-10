@@ -28,11 +28,11 @@ iteration inside a short `salloc`, but it silently ignores each rule's own `reso
 (all rules share the one outer allocation), which is exactly how a real full-scale run got
 OOM-killed on a step whose own rule asked for far more memory than the ad hoc outer job had.
 
-`snakemake` itself lives in the `base` conda env, not this project's `wihttsoip` env (only
-individual rules, via `conda: "wihttsoip"` + `--use-conda`, run inside that env) - if you
+`snakemake` itself lives in the `base` conda env, not this project's `wigttsoip` env (only
+individual rules, via `conda: "wigttsoip"` + `--use-conda`, run inside that env) - if you
 need to invoke it directly rather than through `submit_snakemake_slurm.sh`, use the full
 path (`/users/diasfrazer/manglada/miniforge3/bin/snakemake`) rather than activating
-`wihttsoip` first, or you'll get `snakemake: command not found`.
+`wigttsoip` first, or you'll get `snakemake: command not found`.
 
 ## Cluster operational notes (lessons learned the hard way)
 
@@ -105,7 +105,7 @@ All paths/params are centralized in `config/config.yaml` (`gencode`, `alphagenom
 
 ## Conda environments
 
-Single project env, `environment.yaml` -> `wihttsoip` (pandas, pyarrow, pyranges, anndata,
+Single project env, `environment.yaml` -> `wigttsoip` (pandas, pyarrow, pyranges, anndata,
 pysam, duckdb, the vendored/patched `alphagenome` package, `jax[cuda12]` +
 `alphagenome_research` for local GPU forward passes, `ipykernel`/`nbconvert` for
 `notebooks/hbb.ipynb`'s headless execution via `figures.smk`). `snakemake` itself is in the

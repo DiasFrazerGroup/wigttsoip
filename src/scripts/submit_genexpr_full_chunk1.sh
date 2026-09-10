@@ -18,9 +18,9 @@
 
 set -eo pipefail
 
-cd /users/diasfrazer/manglada/projects/wihttsoip
+cd /users/diasfrazer/manglada/projects/wigttsoip
 source /users/diasfrazer/manglada/miniforge3/etc/profile.d/conda.sh
-conda activate wihttsoip
+conda activate wigttsoip
 
 SAMPLES=$(cat data/prep/alphagenome-genexpr/full_chunks/chunk_1_samples.txt)
 

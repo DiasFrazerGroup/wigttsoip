@@ -7,7 +7,7 @@ rule subset_hbb_k562_genexpr_personalized_dev:
     output:
         config["alphagenome_genexpr"]["paths"]["hbb_k562_dev"],
     conda:
-        "wihttsoip"
+        "wigttsoip"
     shell:
         """
         python workflows/02-preprocess_data/scripts/subset_genexpr_personalized.py \
@@ -28,7 +28,7 @@ rule subset_hbb_k562_genexpr_personalized_full:
     output:
         config["alphagenome_genexpr"]["paths"]["hbb_k562_full"],
     conda:
-        "wihttsoip"
+        "wigttsoip"
     shell:
         """
         python workflows/02-preprocess_data/scripts/subset_genexpr_personalized.py \
@@ -69,7 +69,7 @@ rule predict_alphagenome_genexpr_dev:
         partition = "gpu_diasfrazer",
         qos = "short",
     conda:
-        "wihttsoip"
+        "wigttsoip"
     retries: 3  # only unfinished samples are re-run on retry/resume - see output dir
     shell:
         """
@@ -139,7 +139,7 @@ rule predict_alphagenome_genexpr_full:
         # qos=vlong regardless of an explicit qos="marathon"), and
         # publication_variant_interpretation's GPU rules never set qos either.
     conda:
-        "wihttsoip"
+        "wigttsoip"
     retries: 3
     shell:
         """
