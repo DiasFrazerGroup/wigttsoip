@@ -81,9 +81,9 @@ rule download_alphagenome_atlas_hbb_tss_pm5kb_genexpr:
         """
 
 
-rule extract_hbb_k562_variant_effects_long:
+rule extract_hbb_wholeblood_variant_effects_long:
     """Example downstream extraction: how each variant in the HBB TSS+/-5kb window alters
-    HBB's own expression specifically in K562 tracks, as a long-format
+    HBB's own expression specifically in GTEx whole blood tracks, as a long-format
     (variant, gene, track, score, quantile) parquet. Reads only the matching row/column
     slice of each overlapping chunk via h5py (scripts/extract_alphagenome_atlas_genexpr.py),
     never a whole chunk's full matrix."""
@@ -91,7 +91,7 @@ rule extract_hbb_k562_variant_effects_long:
         done = config["alphagenome_atlas"]["paths"]["done_small"],
         gene_annotation = config["gencode"]["paths"]["gtf_parquet"],
     output:
-        directory(config["alphagenome_atlas"]["paths"]["hbb_k562_long"]),
+        directory(config["alphagenome_atlas"]["paths"]["hbb_wholeblood_long"]),
     params:
         chromosome = config["alphagenome_atlas"]["hbb_window"]["chromosome"],
         start = config["alphagenome_atlas"]["hbb_window"]["small"]["start"],
@@ -99,7 +99,7 @@ rule extract_hbb_k562_variant_effects_long:
         chunk_size = config["alphagenome_atlas"]["chunk_size_bp"],
         chunk_cache_dir = config["alphagenome_atlas"]["paths"]["chunk_cache"],
         gene_ids = ["ENSG00000244734"],  # HBB
-        biosample_name = ["K562"],
+        biosample_name = "venous blood",
     resources:
         runtime = 30,
         mem_mb = 4000,
@@ -116,15 +116,15 @@ rule extract_hbb_k562_variant_effects_long:
             --chunk-size {params.chunk_size} \
             --gene-ids {params.gene_ids} \
             --gene-annotation {input.gene_annotation} \
-            --biosample-name {params.biosample_name} \
+            --biosample-name "{params.biosample_name}" \
             --output {output}
 
         echo "Done!"
         """
 
 
-rule extract_hbb_k562_variant_effects_long_dev:
-    """Same extraction as extract_hbb_k562_variant_effects_long, but over hbb_window.dev
+rule extract_hbb_wholeblood_variant_effects_long_dev:
+    """Same extraction as extract_hbb_wholeblood_variant_effects_long, but over hbb_window.dev
     (TSS +/- 8192bp) - matches alphagenome_genexpr.paths.dev's window exactly, so the
     dev-scale 03-analysis join can match every variant in a dev individual's combination
     (hbb_window.small, TSS +/- 5kb, is narrower and leaves most of that window's variants
@@ -135,7 +135,7 @@ rule extract_hbb_k562_variant_effects_long_dev:
         done = config["alphagenome_atlas"]["paths"]["done_full"],
         gene_annotation = config["gencode"]["paths"]["gtf_parquet"],
     output:
-        directory(config["alphagenome_atlas"]["paths"]["hbb_k562_long_dev"]),
+        directory(config["alphagenome_atlas"]["paths"]["hbb_wholeblood_long_dev"]),
     params:
         chromosome = config["alphagenome_atlas"]["hbb_window"]["chromosome"],
         start = config["alphagenome_atlas"]["hbb_window"]["dev"]["start"],
@@ -143,7 +143,7 @@ rule extract_hbb_k562_variant_effects_long_dev:
         chunk_size = config["alphagenome_atlas"]["chunk_size_bp"],
         chunk_cache_dir = config["alphagenome_atlas"]["paths"]["chunk_cache"],
         gene_ids = ["ENSG00000244734"],  # HBB
-        biosample_name = ["K562"],
+        biosample_name = "venous blood",
     resources:
         runtime = 30,
         mem_mb = 4000,
@@ -160,15 +160,15 @@ rule extract_hbb_k562_variant_effects_long_dev:
             --chunk-size {params.chunk_size} \
             --gene-ids {params.gene_ids} \
             --gene-annotation {input.gene_annotation} \
-            --biosample-name {params.biosample_name} \
+            --biosample-name "{params.biosample_name}" \
             --output {output}
 
         echo "Done!"
         """
 
 
-rule extract_hbb_k562_variant_effects_long_full:
-    """Same extraction as extract_hbb_k562_variant_effects_long, but over every variant in
+rule extract_hbb_wholeblood_variant_effects_long_full:
+    """Same extraction as extract_hbb_wholeblood_variant_effects_long, but over every variant in
     the full 1,048,576bp HBB window rather than just the TSS+/-5kb dev window - reads only
     the matching row/column slice of each overlapping chunk via h5py, never a whole chunk's
     full matrix."""
@@ -176,7 +176,7 @@ rule extract_hbb_k562_variant_effects_long_full:
         done = config["alphagenome_atlas"]["paths"]["done_full"],
         gene_annotation = config["gencode"]["paths"]["gtf_parquet"],
     output:
-        directory(config["alphagenome_atlas"]["paths"]["hbb_k562_long_full"]),
+        directory(config["alphagenome_atlas"]["paths"]["hbb_wholeblood_long_full"]),
     params:
         chromosome = config["alphagenome_atlas"]["hbb_window"]["chromosome"],
         start = config["alphagenome_atlas"]["hbb_window"]["full"]["start"],
@@ -184,7 +184,7 @@ rule extract_hbb_k562_variant_effects_long_full:
         chunk_size = config["alphagenome_atlas"]["chunk_size_bp"],
         chunk_cache_dir = config["alphagenome_atlas"]["paths"]["chunk_cache"],
         gene_ids = ["ENSG00000244734"],  # HBB
-        biosample_name = ["K562"],
+        biosample_name = "venous blood",
     resources:
         # The full window is ~2048 chunk files (1,048,576bp / 512bp chunk_size_bp) -
         # each has fixed per-file overhead (open, decode obs/var string columns,
@@ -197,12 +197,12 @@ rule extract_hbb_k562_variant_effects_long_full:
         # zstd-compressed parquet file as soon as it's full, instead of accumulating
         # every chunk's rows in memory for one final concat - so mem_mb no longer
         # needs to scale with interval width.
-        runtime = 120,
-        mem_mb = 8000,
+        runtime = 30,
+        mem_mb = 24000,
         gres = "none",
         partition = "genoa64",
         qos = "short",
-    threads: 5
+    threads: 32
     conda:
         "wigttsoip"
     shell:
@@ -213,7 +213,7 @@ rule extract_hbb_k562_variant_effects_long_full:
             --chunk-size {params.chunk_size} \
             --gene-ids {params.gene_ids} \
             --gene-annotation {input.gene_annotation} \
-            --biosample-name {params.biosample_name} \
+            --biosample-name "{params.biosample_name}" \
             --max-workers {threads} \
             --output {output}
 

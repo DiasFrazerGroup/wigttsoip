@@ -12,7 +12,7 @@ rule all:
 
         # NOTE: summarize_whole_vs_sum_parts_full and render_hbb_notebook are deliberately
         # NOT in rule all - the former depends on predict_alphagenome_genexpr_full
-        # (02-preprocess_data) and extract_hbb_k562_variant_effects_long_full
+        # (02-preprocess_data) and extract_hbb_wholeblood_variant_effects_long_full
         # (01-obtain_data), both long-running and triggered explicitly; the latter reads
         # full-scale outputs (SCALE = "full" in notebooks/hbb.ipynb). Trigger explicitly, e.g.:
         #   snakemake -s workflows/03-analysis/Snakefile <path from config analysis.paths.whole_vs_sum_parts_full>

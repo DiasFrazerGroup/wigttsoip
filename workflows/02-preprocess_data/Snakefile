@@ -6,7 +6,7 @@ rule all:
     input:
         # dev-scale personalized-sequence forward passes - cheap enough to always run
         config["alphagenome_genexpr"]["paths"]["dev"],
-        config["alphagenome_genexpr"]["paths"]["hbb_k562_dev"],
+        config["alphagenome_genexpr"]["paths"]["hbb_wholeblood_dev"],
 
         # NOTE: predict_alphagenome_genexpr_full is deliberately NOT in rule all -
         # it's a long-running, GPU-time-bound job over the full cohort/window, trigger

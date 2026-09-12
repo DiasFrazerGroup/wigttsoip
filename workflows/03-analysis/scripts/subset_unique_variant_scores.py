@@ -1,4 +1,4 @@
-"""Restrict AlphaGenome Atlas single-variant HBB/K562 scores to just the unique SNVs listed
+"""Restrict AlphaGenome Atlas single-variant HBB/whole blood scores to just the unique SNVs listed
 in --variants (see get_unique_variants.py) - Atlas's saturation set scores every possible
 alt allele at every position in the window, but only a fraction of those are ever
 polymorphic in the sample set actually being joined against, so restricting the singles

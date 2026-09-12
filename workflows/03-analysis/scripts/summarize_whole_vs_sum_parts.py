@@ -5,17 +5,17 @@ the additive/no-epistasis null.
 
 A track is identified by track_name; per alphagenome.models.variant_scorers.tidy_anndata's
 own docstring, (track_name, track_strand) is the minimal key that uniquely identifies a
-track in general - e.g. K562 has two distinct "polyA plus RNA-seq" tracks (one strand='.',
-one strand='-'). But the join below matches on track_name ALONE (not also track_strand):
-for "total RNA-seq" specifically, alphagenome_genexpr.py's personalized-sequence model only
-ever emits it strand='-' (HBB is a minus-strand gene, and match_gene_strand=True there keeps
-only gene-strand-consistent tracks), while Atlas's own K562 catalog only ever exposes it
-strand='.' - an unresolved mismatch in how the two systems label that one assay's strand,
-not a case of two genuinely distinct tracks (confirmed: Atlas's singles table never has more
-than one track_strand value per track_name, so this can't create spurious duplicate matches
-via fan-out). Output keeps combined's own track_strand value (not singles'), since that's the
-one meaningful for match_gene_strand filtering. No averaging across duplicate (sample, track)
-rows otherwise: each output row is one real track's whole_score/sum_parts_score pair.
+track in general - e.g. some biosamples have two distinct "polyA plus RNA-seq" tracks (one
+strand='.', one strand='-'). The join below matches on track_name ALONE (not also
+track_strand) as a defensive default: for the GTEx whole blood polyA track used here, both
+Atlas's singles table and alphagenome_genexpr.py's personalized-sequence model agree on
+strand='.' (confirmed directly), so this doesn't currently collapse anything that should
+have stayed distinct - but track_name alone is kept as the join key rather than reintroducing
+a track_strand equality check, since Atlas's singles table never has more than one
+track_strand value per track_name (so this can't create spurious duplicate matches via
+fan-out either way). Output keeps combined's own track_strand value (not singles'), since
+that's the one meaningful for match_gene_strand filtering. No averaging across duplicate
+(sample, track) rows otherwise: each output row is one real track's whole_score/sum_parts_score pair.
 n_variants vs n_variants_matched flags combinations with a variant outside the singles
 window/track set, where sum_parts_score would otherwise silently understate the true sum.
 """
@@ -133,8 +133,8 @@ def main(combined_path, singles_path, output, memory_limit_mb=None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--combined", required=True, help="HBB/K562 genexpr_personalized parquet (02-preprocess_data)")
-    parser.add_argument("--singles", required=True, help="HBB/K562 Atlas variant-effects long parquet (01-obtain_data)")
+    parser.add_argument("--combined", required=True, help="HBB/whole blood genexpr_personalized parquet (02-preprocess_data)")
+    parser.add_argument("--singles", required=True, help="HBB/whole blood Atlas variant-effects long parquet (01-obtain_data)")
     parser.add_argument("--output", required=True)
     parser.add_argument("--memory-limit-mb", type=int, default=None, help="duckdb memory_limit, in MB - match the job's own --mem/resources.mem_mb")
     args = parser.parse_args()

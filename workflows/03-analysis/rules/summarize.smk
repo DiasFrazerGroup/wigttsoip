@@ -1,8 +1,8 @@
-rule get_unique_hbb_k562_variants_dev:
+rule get_unique_hbb_wholeblood_variants_dev:
     """Distinct SNVs actually carried by the dev sample list in the HBB dev window - see
     scripts/get_unique_variants.py. Independent of any track/score data, so it feeds both
-    subset_hbb_k562_unique_variant_scores_dev and
-    annotate_hbb_k562_unique_variant_gnomad_maf_dev without either depending on the other."""
+    subset_hbb_wholeblood_unique_variant_scores_dev and
+    annotate_hbb_wholeblood_unique_variant_gnomad_maf_dev without either depending on the other."""
     input:
         vcf = config["alphagenome_genexpr"]["vcf"],
     output:
@@ -34,8 +34,8 @@ rule get_unique_hbb_k562_variants_dev:
         """
 
 
-rule get_unique_hbb_k562_variants_full:
-    """Same as get_unique_hbb_k562_variants_dev, but over the full 1,048,576bp window and
+rule get_unique_hbb_wholeblood_variants_full:
+    """Same as get_unique_hbb_wholeblood_variants_dev, but over the full 1,048,576bp window and
     the full 3,202-sample cohort (no --samples filter needed: a jointly-called multi-sample
     VCF only lists a site because >=1 of ALL its samples carries the ALT there, so every SNV
     row already qualifies)."""
@@ -68,14 +68,14 @@ rule get_unique_hbb_k562_variants_full:
         """
 
 
-rule subset_hbb_k562_unique_variant_scores_dev:
-    """Restrict Atlas's HBB/K562 singles scores (every possible alt allele at every
-    position) to just the unique variant set from get_unique_hbb_k562_variants_dev - see
+rule subset_hbb_wholeblood_unique_variant_scores_dev:
+    """Restrict Atlas's HBB/whole blood singles scores (every possible alt allele at every
+    position) to just the unique variant set from get_unique_hbb_wholeblood_variants_dev - see
     scripts/subset_unique_variant_scores.py. Makes the whole_vs_sum_parts join below run
     against a much smaller table."""
     input:
         variants = config["analysis"]["paths"]["unique_variants_dev"],
-        singles = config["alphagenome_atlas"]["paths"]["hbb_k562_long_dev"],
+        singles = config["alphagenome_atlas"]["paths"]["hbb_wholeblood_long_dev"],
     output:
         config["analysis"]["paths"]["unique_variant_scores_dev"],
     resources:
@@ -97,12 +97,12 @@ rule subset_hbb_k562_unique_variant_scores_dev:
         """
 
 
-rule subset_hbb_k562_unique_variant_scores_full:
-    """Same as subset_hbb_k562_unique_variant_scores_dev, but over the full window's unique
+rule subset_hbb_wholeblood_unique_variant_scores_full:
+    """Same as subset_hbb_wholeblood_unique_variant_scores_dev, but over the full window's unique
     variant set."""
     input:
         variants = config["analysis"]["paths"]["unique_variants_full"],
-        singles = config["alphagenome_atlas"]["paths"]["hbb_k562_long_full"],
+        singles = config["alphagenome_atlas"]["paths"]["hbb_wholeblood_long_full"],
     output:
         config["analysis"]["paths"]["unique_variant_scores_full"],
     resources:
@@ -124,11 +124,11 @@ rule subset_hbb_k562_unique_variant_scores_full:
         """
 
 
-rule annotate_hbb_k562_unique_variant_gnomad_maf_dev:
+rule annotate_hbb_wholeblood_unique_variant_gnomad_maf_dev:
     """Annotate the dev-scale unique-variant set with gnomAD v3.1.1 allele frequency and
     minor allele frequency - see scripts/annotate_variants_gnomad_maf.py (one indexed
     region fetch of gnomAD's tabix'd VCF, then in-memory lookups, not one query/variant).
-    Depends only on get_unique_hbb_k562_variants_dev, not on any Atlas/track data."""
+    Depends only on get_unique_hbb_wholeblood_variants_dev, not on any Atlas/track data."""
     input:
         variants = config["analysis"]["paths"]["unique_variants_dev"],
         gnomad_vcf = config["gnomad"]["paths"]["chr11_vcf"],
@@ -160,8 +160,8 @@ rule annotate_hbb_k562_unique_variant_gnomad_maf_dev:
         """
 
 
-rule annotate_hbb_k562_unique_variant_gnomad_maf_full:
-    """Same as annotate_hbb_k562_unique_variant_gnomad_maf_dev, but over the full window's
+rule annotate_hbb_wholeblood_unique_variant_gnomad_maf_full:
+    """Same as annotate_hbb_wholeblood_unique_variant_gnomad_maf_dev, but over the full window's
     unique-variant set."""
     input:
         variants = config["analysis"]["paths"]["unique_variants_full"],
@@ -203,10 +203,10 @@ rule summarize_whole_vs_sum_parts_dev:
     "sum_parts_score") - the additive/no-epistasis null. See
     scripts/summarize_whole_vs_sum_parts.py for the join logic (tracks keyed by
     (track_name, track_strand), no averaging across distinct tracks). Joins against the
-    unique-variant-subsetted singles table (see subset_hbb_k562_unique_variant_scores_dev),
+    unique-variant-subsetted singles table (see subset_hbb_wholeblood_unique_variant_scores_dev),
     not the raw Atlas extraction, for a smaller/faster join."""
     input:
-        combined = config["alphagenome_genexpr"]["paths"]["hbb_k562_dev"],
+        combined = config["alphagenome_genexpr"]["paths"]["hbb_wholeblood_dev"],
         singles = config["analysis"]["paths"]["unique_variant_scores_dev"],
     output:
         config["analysis"]["paths"]["whole_vs_sum_parts_dev"],
@@ -241,7 +241,7 @@ rule summarize_whole_vs_sum_parts_full:
     variant lists is memory-heavy well before the final row counts are). --memory-limit-mb
     is always passed matching resources.mem_mb for exactly this reason."""
     input:
-        combined = config["alphagenome_genexpr"]["paths"]["hbb_k562_full"],
+        combined = config["alphagenome_genexpr"]["paths"]["hbb_wholeblood_full"],
         singles = config["analysis"]["paths"]["unique_variant_scores_full"],
     output:
         config["analysis"]["paths"]["whole_vs_sum_parts_full"],

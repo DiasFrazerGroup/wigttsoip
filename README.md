@@ -32,7 +32,7 @@ Also requires:
 - Download the AlphaGenome JAX model weights (for the local GPU forward passes in step 2).
 - Query the AlphaGenome Atlas API for single-variant RNA_SEQ effect scores of every SNV in
   the HBB window (dev: TSS +/- 5kb; full: the full 1,048,576bp window), and extract an
-  HBB/K562 long-format parquet from the cached chunks.
+  HBB/whole blood (GTEx) long-format parquet from the cached chunks.
 
 ### 2. Preprocess data (`workflows/02-preprocess_data`)
 - For each 1000 Genomes individual, build their personalized HBB-window sequence by applying
@@ -41,7 +41,7 @@ Also requires:
   (GPU), and score the predicted RNA_SEQ change per gene per track using AlphaGenome's own
   official gene-mask scorer (`GeneMaskLFCScorer`), so results are directly comparable to the
   Atlas single-variant scores from step 1.
-- Subset the personalized-effect batches down to HBB/K562 rows into one parquet.
+- Subset the personalized-effect batches down to HBB/whole blood (GTEx) rows into one parquet.
 
 ### 3. Analysis (`workflows/03-analysis`)
 - Get the distinct SNVs actually carried by the 1000 Genomes samples in scope (independent
@@ -54,18 +54,18 @@ Also requires:
   combination-of-variants effect (step 2, `whole_score`) against the sum of their variants'
   own single-variant effects (step 1, `sum_parts_score`) into a single long-format parquet -
   the additive/no-epistasis null against which to test for synergy or saturation.
-- `notebooks/hbb.ipynb` (`figures.smk`, executed in place via `jupyter nbconvert`): single-
-  variant effects across the HBB window with gene annotation, single-variant effects vs.
-  gnomAD MAF, and combinatorial vs. sum-of-parts with Pearson stats.
+- `notebooks/hbb.ipynb` (`figures.smk`, executed in place via `jupyter nbconvert`): a minimal
+  four-panel story - (A) whole vs. sum of independent effects, (B) compression vs. summed
+  effect magnitude, (C) effective dimensionality (strongest single variant / top-k curve),
+  (D) residual context-dependence after removing compression - plus a weak-tail
+  accumulation control and a supplementary section (GMM clustering, extreme individuals).
 
-**Track-matching note**: the join matches on `track_name` alone, not also `track_strand`.
-For "total RNA-seq" specifically, the personalized-sequence model (step 2) only ever emits
-it `strand='-'` (HBB is a minus-strand gene, and `match_gene_strand=True` there keeps only
-gene-strand-consistent tracks), while Atlas's own K562 catalog only ever exposes it
-`strand='.'` - an unresolved metadata-labeling mismatch between the two systems for that one
-assay, not two genuinely distinct tracks (confirmed: Atlas's singles table never has more
-than one `track_strand` value per `track_name`, so this can't create duplicate-match
-fan-out). "polyA plus RNA-seq" has no such mismatch (both sides expose `strand='.'`).
+**Track-matching note**: the join matches on `track_name` alone, not also `track_strand`, as
+a defensive default. For the GTEx whole blood polyA track used here, both the
+personalized-sequence model (step 2) and Atlas's singles table (step 1) agree on
+`strand='.'`, so this isn't currently working around any mismatch - kept anyway since
+Atlas's singles table never has more than one `track_strand` value per `track_name`, so
+matching on `track_name` alone can't create duplicate-match fan-out.
 
 ## Running
 
@@ -126,7 +126,7 @@ python src/scripts/merge_genexpr_full_chunks.py \
 **This stays reproducible via plain Snakemake**: nothing about the resulting `full/`
 directory is special-cased - it's the exact same `batch_*.parquet` shape
 `predict_alphagenome_genexpr_full` produces on its own, so every downstream rule
-(`subset_hbb_k562_genexpr_personalized_full` onward) runs against it unmodified, and running
+(`subset_hbb_wholeblood_genexpr_personalized_full` onward) runs against it unmodified, and running
 `predict_alphagenome_genexpr_full` itself later would simply compute whatever samples are
 still missing. The one gotcha: since Snakemake didn't run the job that wrote into `full/`
 itself, it doesn't know that output is "complete" and raises `IncompleteFilesException` on

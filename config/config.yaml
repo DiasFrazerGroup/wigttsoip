@@ -56,16 +56,16 @@ alphagenome_atlas:
     done_small: "data/raw/alphagenome-atlas/hbb_window/chunks/.done_tss_pm5kb"
     done_full: "data/raw/alphagenome-atlas/hbb_window/chunks/.done_full"
     # Example downstream extraction: how each variant alters HBB's own expression
-    # specifically in K562 tracks, as a long-format (variant, gene, track, score,
+    # specifically in GTEx whole blood tracks, as a long-format (variant, gene, track, score,
     # quantile) directory of zstd-compressed batch_*.parquet files (bounds peak
     # memory - see extract_to_batches() in scripts/extract_alphagenome_atlas_genexpr.py).
-    hbb_k562_long: "results/01-obtain_data/alphagenome-atlas/hbb_window/hbb_k562_variant_effects.long"
+    hbb_wholeblood_long: "results/01-obtain_data/alphagenome-atlas/hbb_window/hbb_wholeblood_variant_effects.long"
     # Same extraction, but over hbb_window.dev (TSS +/- 8192) - matches
     # alphagenome_genexpr.paths.dev's window exactly, for the dev-scale 03-analysis join.
-    hbb_k562_long_dev: "results/01-obtain_data/alphagenome-atlas/hbb_window/hbb_k562_variant_effects.dev.long"
+    hbb_wholeblood_long_dev: "results/01-obtain_data/alphagenome-atlas/hbb_window/hbb_wholeblood_variant_effects.dev.long"
     # Same extraction, but over every variant in the full 1,048,576bp window
     # (once download_alphagenome_atlas_hbb_window_genexpr/.done_full has run).
-    hbb_k562_long_full: "results/01-obtain_data/alphagenome-atlas/hbb_window/hbb_k562_variant_effects.full.long"
+    hbb_wholeblood_long_full: "results/01-obtain_data/alphagenome-atlas/hbb_window/hbb_wholeblood_variant_effects.full.long"
 
 # 1000 Genomes 30x high-coverage rerelease (raw, unphased GT + annotations).
 # Only chr11 is downloaded - scoped to the HBB window, same as alphagenome_atlas above.
@@ -115,32 +115,32 @@ alphagenome_genexpr:
   paths:
     dev: "results/02-preprocess_data/alphagenome/hbb_window/genexpr_personalized/dev"
     full: "results/02-preprocess_data/alphagenome/hbb_window/genexpr_personalized/full"
-    hbb_k562_dev: "results/02-preprocess_data/alphagenome/hbb_window/hbb_k562_genexpr_personalized.dev.parquet"
-    hbb_k562_full: "results/02-preprocess_data/alphagenome/hbb_window/hbb_k562_genexpr_personalized.full.parquet"
+    hbb_wholeblood_dev: "results/02-preprocess_data/alphagenome/hbb_window/hbb_wholeblood_genexpr_personalized.dev.parquet"
+    hbb_wholeblood_full: "results/02-preprocess_data/alphagenome/hbb_window/hbb_wholeblood_genexpr_personalized.full.parquet"
 
 # 03-analysis: does AlphaGenome predict combinations of variants (the personalized-sequence
 # forward pass above) to differ from the naive sum of each variant's own single-variant
 # Atlas effect (i.e. superadditivity/epistasis - "is the whole greater than the sum of its
-# parts?"). Compares alphagenome_genexpr's combined HBB/K562 effects against
-# alphagenome_atlas's single-variant HBB/K562 effects.
+# parts?"). Compares alphagenome_genexpr's combined HBB/whole blood effects against
+# alphagenome_atlas's single-variant HBB/whole blood effects.
 analysis:
   paths:
     # Distinct SNVs (chrom:pos:ref>alt) actually carried by the 1000 Genomes samples in
     # scope (dev's small sample list / the full 3,202-sample cohort) - independent of any
     # track/score data, so both paths below can consume it without depending on each other.
-    unique_variants_dev: "results/03-analysis/hbb_k562/unique_variants.dev.parquet"
-    unique_variants_full: "results/03-analysis/hbb_k562/unique_variants.full.parquet"
-    # Atlas's HBB/K562 singles scores restricted to just those unique variants - Atlas
+    unique_variants_dev: "results/03-analysis/hbb_wholeblood/unique_variants.dev.parquet"
+    unique_variants_full: "results/03-analysis/hbb_wholeblood/unique_variants.full.parquet"
+    # Atlas's HBB/whole blood singles scores restricted to just those unique variants - Atlas
     # scores every possible alt allele at every position, but only a fraction is ever
     # polymorphic in a given sample set, so the whole_vs_sum_parts join runs against this
     # much smaller table instead of the raw Atlas extraction.
-    unique_variant_scores_dev: "results/03-analysis/hbb_k562/unique_variant_scores.dev.parquet"
-    unique_variant_scores_full: "results/03-analysis/hbb_k562/unique_variant_scores.full.parquet"
+    unique_variant_scores_dev: "results/03-analysis/hbb_wholeblood/unique_variant_scores.dev.parquet"
+    unique_variant_scores_full: "results/03-analysis/hbb_wholeblood/unique_variant_scores.full.parquet"
     # gnomAD v3.1.1 allele frequency + minor allele frequency for those same unique variants.
-    unique_variant_gnomad_maf_dev: "results/03-analysis/hbb_k562/unique_variant_gnomad_maf.dev.parquet"
-    unique_variant_gnomad_maf_full: "results/03-analysis/hbb_k562/unique_variant_gnomad_maf.full.parquet"
-    whole_vs_sum_parts_dev: "results/03-analysis/hbb_k562/whole_vs_sum_parts.dev.parquet"
-    whole_vs_sum_parts_full: "results/03-analysis/hbb_k562/whole_vs_sum_parts.full.parquet"
+    unique_variant_gnomad_maf_dev: "results/03-analysis/hbb_wholeblood/unique_variant_gnomad_maf.dev.parquet"
+    unique_variant_gnomad_maf_full: "results/03-analysis/hbb_wholeblood/unique_variant_gnomad_maf.full.parquet"
+    whole_vs_sum_parts_dev: "results/03-analysis/hbb_wholeblood/whole_vs_sum_parts.dev.parquet"
+    whole_vs_sum_parts_full: "results/03-analysis/hbb_wholeblood/whole_vs_sum_parts.full.parquet"
 
 # gnomAD v3.1.1 joint sites VCF (GRCh38, matching 1000 Genomes/AlphaGenome's build),
 # already available locally (data/raw/gnomad symlink) with standard AC/AN/AF INFO fields.

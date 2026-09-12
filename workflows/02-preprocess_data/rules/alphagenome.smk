@@ -1,11 +1,17 @@
-rule subset_hbb_k562_genexpr_personalized_dev:
-    """Subset the dev batch_*.parquet directory down to HBB gene rows in K562 tracks,
+rule subset_hbb_wholeblood_genexpr_personalized_dev:
+    """Subset the dev batch_*.parquet directory down to HBB gene rows in the GTEx whole blood track,
     across all samples, into a single parquet - via duckdb, so none of the batch files
     are ever loaded into pandas at once."""
     input:
         config["alphagenome_genexpr"]["paths"]["dev"],
     output:
-        config["alphagenome_genexpr"]["paths"]["hbb_k562_dev"],
+        config["alphagenome_genexpr"]["paths"]["hbb_wholeblood_dev"],
+    resources:
+        runtime = 15,
+        mem_mb = 4000,
+        gres = "none",
+        partition = "genoa64",
+        qos = "short",
     conda:
         "wigttsoip"
     shell:
@@ -13,20 +19,26 @@ rule subset_hbb_k562_genexpr_personalized_dev:
         python workflows/02-preprocess_data/scripts/subset_genexpr_personalized.py \
             --input-dir {input} \
             --gene-name HBB \
-            --biosample-name K562 \
+            --biosample-name "venous blood" \
             --output {output}
 
         echo "Done!"
         """
 
 
-rule subset_hbb_k562_genexpr_personalized_full:
-    """Same as subset_hbb_k562_genexpr_personalized_dev, but over the full-scale (all 3,202
+rule subset_hbb_wholeblood_genexpr_personalized_full:
+    """Same as subset_hbb_wholeblood_genexpr_personalized_dev, but over the full-scale (all 3,202
     samples, 1,048,576bp window) genexpr_personalized directory."""
     input:
         config["alphagenome_genexpr"]["paths"]["full"],
     output:
-        config["alphagenome_genexpr"]["paths"]["hbb_k562_full"],
+        config["alphagenome_genexpr"]["paths"]["hbb_wholeblood_full"],
+    resources:
+        runtime = 60,
+        mem_mb = 16000,
+        gres = "none",
+        partition = "genoa64",
+        qos = "short",
     conda:
         "wigttsoip"
     shell:
@@ -34,7 +46,7 @@ rule subset_hbb_k562_genexpr_personalized_full:
         python workflows/02-preprocess_data/scripts/subset_genexpr_personalized.py \
             --input-dir {input} \
             --gene-name HBB \
-            --biosample-name K562 \
+            --biosample-name "venous blood" \
             --output {output}
 
         echo "Done!"
