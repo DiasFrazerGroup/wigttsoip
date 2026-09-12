@@ -1,11 +1,14 @@
 rule render_hbb_notebook:
     """Execute notebooks/hbb.ipynb in place via jupyter nbconvert - gene annotation around
-    HBB (overview + zoom), variant-burden/whole-score/sum-of-parts distributions, and
-    combined-vs-sum-of-parts (linear and log-squashing) scatterplots. Reads full-scale
-    outputs (SCALE = "full" inside the notebook) - flip to "dev" if iterating on the
-    notebook itself again. Only needs whole_vs_sum_parts (sample-level whole_score/
-    sum_parts_score/n_variants_matched, already aggregated) and the GTF - no per-variant
-    singles/MAF data is read directly by the notebook anymore.
+    HBB (1Mb overview + zoom), variant burden per individual, combinatorial-vs-summed effect
+    distributions, a combined-vs-sum-of-parts scatter, and effective-dimensionality plots
+    (correlation vs. number of top variants summed, plus the same distribution/scatter pair
+    restricted to just the top 3 variants). Figures are also saved as PDF under
+    notebooks/pdfs/hbb/ (see notebooks/figutils.py, vendored from
+    ../alphagenome_finetuning_rna/figures/figutils.py for consistent styling). Reads
+    full-scale outputs (SCALE = "full" inside the notebook) - flip to "dev" if iterating on
+    the notebook itself again. Needs unique_variant_scores (per-variant singles scores, for
+    the effective-dimensionality plots) in addition to whole_vs_sum_parts and the GTF.
 
     The rule's declared `output:` is a completion marker, NOT the notebook itself: Snakemake
     deletes a rule's declared outputs before running its shell command (to detect failed
@@ -17,6 +20,7 @@ rule render_hbb_notebook:
     input:
         notebook = "notebooks/hbb.ipynb",
         whole_vs_sum_parts = config["analysis"]["paths"]["whole_vs_sum_parts_full"],
+        unique_variant_scores = config["analysis"]["paths"]["unique_variant_scores_full"],
         gtf = config["gencode"]["paths"]["gtf_parquet"],
     output:
         touch("notebooks/.hbb_rendered"),
