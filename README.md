@@ -1,14 +1,8 @@
 # "Hey AlphaGenome, is the whole greater than the sum of its parts?"
 
 This is the code to reproduce our blogpost on whether AlphaGenome makes predictions for
-combinations of variants that are different than the linear combination of the effects of
+combinations of variants that are different than the sum of the effects of
 different variants predicted alone.
-
-Concretely: for real individuals from 1000 Genomes, does AlphaGenome's predicted effect of
-their *whole combination* of variants around HBB differ from the naive sum of each of those
-same variants' own *single-variant* effect (the additive, no-epistasis null)? A systematic
-excess (combination > sum of singles) would mean AlphaGenome predicts synergy between
-variants; a systematic deficit would mean saturation/antagonism.
 
 ## Installation
 
