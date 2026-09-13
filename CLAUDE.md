@@ -100,8 +100,8 @@ changing still triggers a rerun, but Snakemake never deletes it first.
 ## Configuration
 
 All paths/params are centralized in `config/config.yaml` (`gencode`, `alphagenome_atlas`,
-`thousand_genomes`, `alphagenome_jax`, `alphagenome_genexpr`, `analysis`, `gnomad`). See
-`README.md` for what each stage actually does with them.
+`thousand_genomes`, `alphagenome_jax`, `alphagenome_genexpr`, `analysis`). See `README.md`
+for what each stage actually does with them.
 
 ## Conda environments
 

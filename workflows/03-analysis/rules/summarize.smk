@@ -1,8 +1,7 @@
 rule get_unique_hbb_wholeblood_variants_dev:
     """Distinct SNVs actually carried by the dev sample list in the HBB dev window - see
-    scripts/get_unique_variants.py. Independent of any track/score data, so it feeds both
-    subset_hbb_wholeblood_unique_variant_scores_dev and
-    annotate_hbb_wholeblood_unique_variant_gnomad_maf_dev without either depending on the other."""
+    scripts/get_unique_variants.py. Independent of any track/score data, so it feeds
+    subset_hbb_wholeblood_unique_variant_scores_dev without depending on anything else."""
     input:
         vcf = config["alphagenome_genexpr"]["vcf"],
     output:
@@ -118,78 +117,6 @@ rule subset_hbb_wholeblood_unique_variant_scores_full:
         python workflows/03-analysis/scripts/subset_unique_variant_scores.py \
             --variants {input.variants} \
             --singles {input.singles} \
-            --output {output}
-
-        echo "Done!"
-        """
-
-
-rule annotate_hbb_wholeblood_unique_variant_gnomad_maf_dev:
-    """Annotate the dev-scale unique-variant set with gnomAD v3.1.1 allele frequency and
-    minor allele frequency - see scripts/annotate_variants_gnomad_maf.py (one indexed
-    region fetch of gnomAD's tabix'd VCF, then in-memory lookups, not one query/variant).
-    Depends only on get_unique_hbb_wholeblood_variants_dev, not on any Atlas/track data."""
-    input:
-        variants = config["analysis"]["paths"]["unique_variants_dev"],
-        gnomad_vcf = config["gnomad"]["paths"]["chr11_vcf"],
-    output:
-        config["analysis"]["paths"]["unique_variant_gnomad_maf_dev"],
-    params:
-        chromosome = config["alphagenome_atlas"]["hbb_window"]["chromosome"],
-        start = config["alphagenome_atlas"]["hbb_window"]["dev"]["start"],
-        end = config["alphagenome_atlas"]["hbb_window"]["dev"]["end"],
-    resources:
-        runtime = 15,
-        mem_mb = 4000,
-        gres = "none",
-        partition = "genoa64",
-        qos = "short",
-    conda:
-        "wigttsoip"
-    shell:
-        """
-        python workflows/03-analysis/scripts/annotate_variants_gnomad_maf.py \
-            --variants {input.variants} \
-            --gnomad-vcf {input.gnomad_vcf} \
-            --chromosome {params.chromosome} \
-            --start {params.start} \
-            --end {params.end} \
-            --output {output}
-
-        echo "Done!"
-        """
-
-
-rule annotate_hbb_wholeblood_unique_variant_gnomad_maf_full:
-    """Same as annotate_hbb_wholeblood_unique_variant_gnomad_maf_dev, but over the full window's
-    unique-variant set."""
-    input:
-        variants = config["analysis"]["paths"]["unique_variants_full"],
-        gnomad_vcf = config["gnomad"]["paths"]["chr11_vcf"],
-    output:
-        config["analysis"]["paths"]["unique_variant_gnomad_maf_full"],
-    params:
-        chromosome = config["alphagenome_atlas"]["hbb_window"]["chromosome"],
-        start = config["alphagenome_atlas"]["hbb_window"]["full"]["start"],
-        end = config["alphagenome_atlas"]["hbb_window"]["full"]["end"],
-    resources:
-        # A single fetch across the full 1,048,576bp window took ~34s/~296k gnomAD
-        # records in direct testing - generous headroom, not a tight fit.
-        runtime = 30,
-        mem_mb = 8000,
-        gres = "none",
-        partition = "genoa64",
-        qos = "short",
-    conda:
-        "wigttsoip"
-    shell:
-        """
-        python workflows/03-analysis/scripts/annotate_variants_gnomad_maf.py \
-            --variants {input.variants} \
-            --gnomad-vcf {input.gnomad_vcf} \
-            --chromosome {params.chromosome} \
-            --start {params.start} \
-            --end {params.end} \
             --output {output}
 
         echo "Done!"

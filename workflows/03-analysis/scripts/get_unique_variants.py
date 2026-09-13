@@ -1,10 +1,8 @@
 """Distinct SNVs (chrom:pos:ref>alt, 1-based - matching AlphaGenome Atlas's own `variant`
-convention and gnomAD's VCF POS directly) actually carried by a set of 1000 Genomes samples
-in a genomic window.
+convention directly) actually carried by a set of 1000 Genomes samples in a genomic window.
 
 Deliberately independent of any downstream track/score data - just the variant identities -
-so it can feed both the Atlas singles-subsetting step and gnomAD annotation without either
-depending on the other.
+so it can feed the Atlas singles-subsetting step without depending on anything else.
 """
 
 import argparse

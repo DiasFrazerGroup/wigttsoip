@@ -7,8 +7,6 @@ rule all:
     input:
         # dev-scale whole-vs-sum-of-parts join - cheap enough to always run
         config["analysis"]["paths"]["whole_vs_sum_parts_dev"],
-        # dev-scale gnomAD allele frequency / MAF annotation of the unique variant set
-        config["analysis"]["paths"]["unique_variant_gnomad_maf_dev"],
 
         # NOTE: summarize_whole_vs_sum_parts_full and render_hbb_notebook are deliberately
         # NOT in rule all - the former depends on predict_alphagenome_genexpr_full

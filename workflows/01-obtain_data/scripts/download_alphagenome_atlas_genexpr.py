@@ -52,10 +52,9 @@ def load_gencode_gene_ids(gene_annotation_parquet, gene_ids):
 def load_variants(variants_parquets):
     """Load one or more variants parquets (id_var, chrom, pos, ref, alt, gene_id) into genome.Variant objects.
 
-    Returns the variants alongside each one's *assigned* gene_id (the gene it
-    was actually sampled for, e.g. in popping_gnomad) so callers can restrict
-    the (usually much broader) Atlas response down to just those intended
-    variant-gene pairs.
+    Returns the variants alongside each one's *assigned* gene_id so callers 
+    can restrict the (usually much broader) Atlas response down to just 
+    those intended variant-gene pairs.
     """
     df = pd.concat(
         [
@@ -103,7 +102,6 @@ def postprocess(
     and filter here instead, on the exact versioned ID resolved from the
     GENCODE annotation (see load_gencode_gene_ids). Two modes:
       - assigned_gene_by_id_var: keep only each variant's own sampled gene
-        (e.g. from popping_gnomad) - the narrow, intended case.
       - versioned_gene_ids: keep any row whose gene is in this set - the
         broad case, used when there's no per-variant assignment (interval mode).
     """

@@ -48,8 +48,6 @@ Also requires:
   of any track/score data), then restrict Atlas's single-variant scores to just that set -
   Atlas scores every possible alt allele at every position, but only a fraction is ever
   polymorphic in a given sample set, so the join below runs against a much smaller table.
-- Annotate that same unique-variant set with gnomAD v3.1.1 allele frequency / minor allele
-  frequency (one indexed region fetch of gnomAD's tabix'd VCF, not one query per variant).
 - Join, per sample and track (`track_name` alone - see note below), each individual's
   combination-of-variants effect (step 2, `whole_score`) against the sum of their variants'
   own single-variant effects (step 1, `sum_parts_score`) into a single long-format parquet -

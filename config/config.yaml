@@ -145,9 +145,6 @@ analysis:
     # much smaller table instead of the raw Atlas extraction.
     unique_variant_scores_dev: "results/03-analysis/hbb_wholeblood/unique_variant_scores.dev.parquet"
     unique_variant_scores_full: "results/03-analysis/hbb_wholeblood/unique_variant_scores.full.parquet"
-    # gnomAD v3.1.1 allele frequency + minor allele frequency for those same unique variants.
-    unique_variant_gnomad_maf_dev: "results/03-analysis/hbb_wholeblood/unique_variant_gnomad_maf.dev.parquet"
-    unique_variant_gnomad_maf_full: "results/03-analysis/hbb_wholeblood/unique_variant_gnomad_maf.full.parquet"
     whole_vs_sum_parts_dev: "results/03-analysis/hbb_wholeblood/whole_vs_sum_parts.dev.parquet"
     whole_vs_sum_parts_full: "results/03-analysis/hbb_wholeblood/whole_vs_sum_parts.full.parquet"
     # All-genes versions of the two paths above: unique_variant_scores restricted to every
@@ -160,9 +157,3 @@ analysis:
     # K_VALUES grid notebooks/hbb.ipynb uses for HBB alone - see
     # scripts/topk_correlation_per_gene.py.
     topk_correlation_per_gene_full: "results/03-analysis/hbb_wholeblood/topk_correlation_per_gene.full.parquet"
-
-# gnomAD v3.1.1 joint sites VCF (GRCh38, matching 1000 Genomes/AlphaGenome's build),
-# already available locally (data/raw/gnomad symlink) with standard AC/AN/AF INFO fields.
-gnomad:
-  paths:
-    chr11_vcf: "data/raw/gnomad/3.1.1/vcf/genomes/gnomad.joint.v3.1.1.sites.chr11.vcf.bgz"
