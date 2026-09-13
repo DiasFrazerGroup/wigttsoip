@@ -66,6 +66,11 @@ alphagenome_atlas:
     # Same extraction, but over every variant in the full 1,048,576bp window
     # (once download_alphagenome_atlas_hbb_window_genexpr/.done_full has run).
     hbb_wholeblood_long_full: "results/01-obtain_data/alphagenome-atlas/hbb_window/hbb_wholeblood_variant_effects.full.long"
+    # Same extraction, but for every gene in gene_ids.txt (not just HBB) - the raw chunk
+    # cache already has every gene overlapping the window, so this needs no new download,
+    # just a broader --gene-ids filter at extraction time. Full window only (the per-gene
+    # correlation-vs-k analysis needs the full 3,202-ish cohort to be meaningful).
+    allgenes_long_full: "results/01-obtain_data/alphagenome-atlas/hbb_window/allgenes_variant_effects.full.long"
 
 # 1000 Genomes 30x high-coverage rerelease (raw, unphased GT + annotations).
 # Only chr11 is downloaded - scoped to the HBB window, same as alphagenome_atlas above.
@@ -117,6 +122,10 @@ alphagenome_genexpr:
     full: "results/02-preprocess_data/alphagenome/hbb_window/genexpr_personalized/full"
     hbb_wholeblood_dev: "results/02-preprocess_data/alphagenome/hbb_window/hbb_wholeblood_genexpr_personalized.dev.parquet"
     hbb_wholeblood_full: "results/02-preprocess_data/alphagenome/hbb_window/hbb_wholeblood_genexpr_personalized.full.parquet"
+    # Same subset, but keeping every gene (not just HBB) - the GPU forward pass already
+    # scored every gene in gene_ids.txt via the official gene-mask scorer, so this is just
+    # a re-subset of the same already-computed full/ batch directory, no new GPU compute.
+    allgenes_full: "results/02-preprocess_data/alphagenome/hbb_window/allgenes_genexpr_personalized.full.parquet"
 
 # 03-analysis: does AlphaGenome predict combinations of variants (the personalized-sequence
 # forward pass above) to differ from the naive sum of each variant's own single-variant
@@ -141,6 +150,16 @@ analysis:
     unique_variant_gnomad_maf_full: "results/03-analysis/hbb_wholeblood/unique_variant_gnomad_maf.full.parquet"
     whole_vs_sum_parts_dev: "results/03-analysis/hbb_wholeblood/whole_vs_sum_parts.dev.parquet"
     whole_vs_sum_parts_full: "results/03-analysis/hbb_wholeblood/whole_vs_sum_parts.full.parquet"
+    # All-genes versions of the two paths above: unique_variant_scores restricted to every
+    # gene in gene_ids.txt (not just HBB), and the resulting whole_vs_sum_parts join keyed
+    # by (sample, gene_id, track) instead of just (sample, track).
+    unique_variant_scores_allgenes_full: "results/03-analysis/hbb_wholeblood/unique_variant_scores.allgenes.full.parquet"
+    whole_vs_sum_parts_allgenes_full: "results/03-analysis/hbb_wholeblood/whole_vs_sum_parts.allgenes.full.parquet"
+    # One row per (gene_id, k): Pearson/Spearman correlation between whole_score and the
+    # sum of that individual's top-k strongest (by |score|) carried variants, for the same
+    # K_VALUES grid notebooks/hbb.ipynb uses for HBB alone - see
+    # scripts/topk_correlation_per_gene.py.
+    topk_correlation_per_gene_full: "results/03-analysis/hbb_wholeblood/topk_correlation_per_gene.full.parquet"
 
 # gnomAD v3.1.1 joint sites VCF (GRCh38, matching 1000 Genomes/AlphaGenome's build),
 # already available locally (data/raw/gnomad symlink) with standard AC/AN/AF INFO fields.

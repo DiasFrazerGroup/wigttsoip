@@ -172,3 +172,31 @@ rule predict_alphagenome_genexpr_full:
 
         echo "Done!"
         """
+
+
+rule subset_allgenes_genexpr_personalized_full:
+    """Same as subset_hbb_wholeblood_genexpr_personalized_full, but keeping every gene (no
+    --gene-name filter) - the GPU forward pass already scored every gene in gene_ids.txt via
+    the official gene-mask scorer, so this is just a re-subset of the same already-computed
+    full/ batch directory, no new GPU compute."""
+    input:
+        config["alphagenome_genexpr"]["paths"]["full"],
+    output:
+        config["alphagenome_genexpr"]["paths"]["allgenes_full"],
+    resources:
+        runtime = 60,
+        mem_mb = 16000,
+        gres = "none",
+        partition = "genoa64",
+        qos = "short",
+    conda:
+        "wigttsoip"
+    shell:
+        """
+        python workflows/02-preprocess_data/scripts/subset_genexpr_personalized.py \
+            --input-dir {input} \
+            --biosample-name "venous blood" \
+            --output {output}
+
+        echo "Done!"
+        """

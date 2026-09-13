@@ -263,3 +263,96 @@ rule summarize_whole_vs_sum_parts_full:
 
         echo "Done!"
         """
+
+
+rule subset_allgenes_unique_variant_scores_full:
+    """Same as subset_hbb_wholeblood_unique_variant_scores_full, but against the allgenes
+    Atlas extraction (every gene in gene_ids.txt, not just HBB) - same unique-variant set,
+    just more (variant, gene) rows kept per variant."""
+    input:
+        variants = config["analysis"]["paths"]["unique_variants_full"],
+        singles = config["alphagenome_atlas"]["paths"]["allgenes_long_full"],
+    output:
+        config["analysis"]["paths"]["unique_variant_scores_allgenes_full"],
+    resources:
+        runtime = 30,
+        mem_mb = 16000,
+        gres = "none",
+        partition = "genoa64",
+        qos = "short",
+    conda:
+        "wigttsoip"
+    shell:
+        """
+        python workflows/03-analysis/scripts/subset_unique_variant_scores.py \
+            --variants {input.variants} \
+            --singles {input.singles} \
+            --output {output}
+
+        echo "Done!"
+        """
+
+
+rule summarize_whole_vs_sum_parts_allgenes_full:
+    """Same join as summarize_whole_vs_sum_parts_full, but over every gene in gene_ids.txt
+    instead of just HBB - see summarize_whole_vs_sum_parts.py, now keyed by gene_id too.
+    ~94x more rows than the HBB-only join, so more memory/time headroom than that rule's
+    32000MB/60min."""
+    input:
+        combined = config["alphagenome_genexpr"]["paths"]["allgenes_full"],
+        singles = config["analysis"]["paths"]["unique_variant_scores_allgenes_full"],
+    output:
+        config["analysis"]["paths"]["whole_vs_sum_parts_allgenes_full"],
+    resources:
+        runtime = 120,
+        mem_mb = 96000,
+        gres = "none",
+        partition = "genoa64",
+        qos = "short",
+    conda:
+        "wigttsoip"
+    shell:
+        """
+        python workflows/03-analysis/scripts/summarize_whole_vs_sum_parts.py \
+            --combined {input.combined} \
+            --singles {input.singles} \
+            --output {output} \
+            --memory-limit-mb {resources.mem_mb}
+
+        echo "Done!"
+        """
+
+
+rule compute_topk_correlation_per_gene_full:
+    """For every gene in the window, correlate each individual's combinatorial effect on
+    that gene against the sum of their top-k strongest carried variants' single-variant
+    effects on that same gene, for the same k grid notebooks/hbb.ipynb uses for HBB alone -
+    see scripts/topk_correlation_per_gene.py. One row per (gene_id, k) in the output."""
+    input:
+        whole_vs_sum = config["analysis"]["paths"]["whole_vs_sum_parts_allgenes_full"],
+        singles = config["analysis"]["paths"]["unique_variant_scores_allgenes_full"],
+    output:
+        config["analysis"]["paths"]["topk_correlation_per_gene_full"],
+    params:
+        track_name = "UBERON:0013756 gtex Whole_Blood polyA plus RNA-seq",
+        track_strand = ".",
+    resources:
+        runtime = 60,
+        mem_mb = 32000,
+        gres = "none",
+        partition = "genoa64",
+        qos = "short",
+    conda:
+        "wigttsoip"
+    shell:
+        """
+        python workflows/03-analysis/scripts/topk_correlation_per_gene.py \
+            --whole-vs-sum {input.whole_vs_sum} \
+            --singles {input.singles} \
+            --track-name "{params.track_name}" \
+            --track-strand "{params.track_strand}" \
+            --output {output} \
+            --memory-limit-mb {resources.mem_mb}
+
+        echo "Done!"
+        """

@@ -1,14 +1,16 @@
 rule render_hbb_notebook:
     """Execute notebooks/hbb.ipynb in place via jupyter nbconvert - gene annotation around
     HBB (1Mb overview + zoom), variant burden per individual, combinatorial-vs-summed effect
-    distributions, a combined-vs-sum-of-parts scatter, and effective-dimensionality plots
+    distributions, a combined-vs-sum-of-parts scatter, effective-dimensionality plots
     (correlation vs. number of top variants summed, plus the same distribution/scatter pair
-    restricted to just the top 3 variants). Figures are also saved as PDF under
-    notebooks/pdfs/hbb/ (see notebooks/figutils.py, vendored from
+    restricted to just the top 3 variants), and a final correlation-vs-k comparison across
+    every gene in the window (scripts/topk_correlation_per_gene.py's output). Figures are
+    also saved as PDF under notebooks/pdfs/hbb/ (see notebooks/figutils.py, vendored from
     ../alphagenome_finetuning_rna/figures/figutils.py for consistent styling). Reads
     full-scale outputs (SCALE = "full" inside the notebook) - flip to "dev" if iterating on
     the notebook itself again. Needs unique_variant_scores (per-variant singles scores, for
-    the effective-dimensionality plots) in addition to whole_vs_sum_parts and the GTF.
+    the effective-dimensionality plots) and topk_correlation_per_gene_full in addition to
+    whole_vs_sum_parts and the GTF.
 
     The rule's declared `output:` is a completion marker, NOT the notebook itself: Snakemake
     deletes a rule's declared outputs before running its shell command (to detect failed
@@ -21,6 +23,7 @@ rule render_hbb_notebook:
         notebook = "notebooks/hbb.ipynb",
         whole_vs_sum_parts = config["analysis"]["paths"]["whole_vs_sum_parts_full"],
         unique_variant_scores = config["analysis"]["paths"]["unique_variant_scores_full"],
+        topk_correlation_per_gene = config["analysis"]["paths"]["topk_correlation_per_gene_full"],
         gtf = config["gencode"]["paths"]["gtf_parquet"],
     output:
         touch("notebooks/.hbb_rendered"),

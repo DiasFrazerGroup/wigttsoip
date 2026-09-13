@@ -221,6 +221,59 @@ rule extract_hbb_wholeblood_variant_effects_long_full:
         """
 
 
+rule extract_allgenes_variant_effects_long_full:
+    """Same as extract_hbb_wholeblood_variant_effects_long_full, but keeping every gene in
+    gene_ids.txt instead of filtering to just HBB - the raw chunk cache already has every
+    gene overlapping the window (download_alphagenome_atlas_hbb_window_genexpr fetches
+    every RNA_SEQ track for every gene, not just HBB), so this needs no new download, just
+    a broader --gene-ids filter read from the same gene list alphagenome_genexpr.py's GPU
+    forward pass already scores against."""
+    input:
+        done = config["alphagenome_atlas"]["paths"]["done_full"],
+        gene_annotation = config["gencode"]["paths"]["gtf_parquet"],
+        gene_ids_file = config["alphagenome_atlas"]["paths"]["gene_ids"],
+    output:
+        directory(config["alphagenome_atlas"]["paths"]["allgenes_long_full"]),
+    params:
+        chromosome = config["alphagenome_atlas"]["hbb_window"]["chromosome"],
+        start = config["alphagenome_atlas"]["hbb_window"]["full"]["start"],
+        end = config["alphagenome_atlas"]["hbb_window"]["full"]["end"],
+        chunk_size = config["alphagenome_atlas"]["chunk_size_bp"],
+        chunk_cache_dir = config["alphagenome_atlas"]["paths"]["chunk_cache"],
+        biosample_name = "venous blood",
+    resources:
+        # Keeping all 94 genes (vs. just HBB) means each chunk's row-explosion is up to
+        # ~94x bigger, especially in this gene-dense beta-globin-cluster region - the
+        # HBB-only version's 24000MB/32-workers OOM'd here; 128000MB/16-workers ran fine
+        # memory-wise but was on track for ~130min total (900/2049 chunks in ~58min) - the
+        # original 60min runtime would have killed it mid-write. 32 workers with this much
+        # memory headroom should roughly halve that, but runtime is set well above even
+        # the slower estimate as a safety margin.
+        runtime = 150,
+        mem_mb = 128000,
+        gres = "none",
+        partition = "genoa64",
+        qos = "short",
+    threads: 32
+    conda:
+        "wigttsoip"
+    shell:
+        """
+        python workflows/01-obtain_data/scripts/extract_alphagenome_atlas_genexpr.py \
+            --interval {params.chromosome}:{params.start}-{params.end} \
+            --chunk-cache-dir {params.chunk_cache_dir} \
+            --chunk-size {params.chunk_size} \
+            --gene-ids $(cat {input.gene_ids_file}) \
+            --gene-annotation {input.gene_annotation} \
+            --biosample-name "{params.biosample_name}" \
+            --max-workers {threads} \
+            --chunks-per-batch 10 \
+            --output {output}
+
+        echo "Done!"
+        """
+
+
 rule download_alphagenome_atlas_hbb_window_genexpr:
     """Download AlphaGenome Atlas variant effect scores on gene expression (all RNA_SEQ tracks)
     for every single-nucleotide variant in a 1,048,576 bp window (AlphaGenome's largest
