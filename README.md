@@ -93,25 +93,17 @@ Snakemake or any heavy script directly on the login node.**
 
 `predict_alphagenome_genexpr_full` (step 2, full scale) is the single most expensive rule in
 the pipeline (~50s/sample on an H100 for the full-window forward pass + scoring, ~44.5h for
-all 3,202 samples). To finish it in roughly half the wall-clock time, it can be split across
-two GPUs by hand instead of through Snakemake's own `--cluster` orchestration:
+all 3,202 samples). The default, reproducible way to run it is the same as any other
+explicit target - `sbatch src/scripts/submit_snakemake_slurm.sh` wrapping a
+`snakemake --cluster ...` call targeting its output path (see "Running" above).
 
-```shell
-sbatch src/scripts/submit_genexpr_full_chunk0.sh   # H100, gpu_diasfrazer
-sbatch src/scripts/submit_genexpr_full_chunk1.sh   # 7g.80gb, gpu partition (has a ~12h wall-time cap - resubmit as needed, it resumes)
-```
-
-Both scripts call `alphagenome_genexpr.py` directly against a disjoint half of the sample
-list (`data/prep/alphagenome-genexpr/full_chunks/chunk_{0,1}_samples.txt`), writing to their
-own `full/chunk_{0,1}/` output subdirectory. Each is independently resumable (it skips any
-sample it already has a `batch_*.parquet` for in its own output directory, continuing batch
-numbering from the highest existing index rather than restarting at 0 - restarting at 0
-would silently overwrite/destroy earlier completed batches, a real bug this pipeline hit and
-fixed). A chunk that hits a wall-time limit can just be resubmitted as-is. Once both chunks
-have processed every sample assigned to them (or you've decided to stop short and proceed
-with however many samples are done - `already_processed_samples()` is exact either way),
-reconcile them into the single flat `full/` directory that `predict_alphagenome_genexpr_full`
-itself would have produced:
+For this analysis, it was instead split across two GPUs by hand (via two now-removed,
+cluster-specific `sbatch` scripts calling `alphagenome_genexpr.py` directly against a
+disjoint half of the sample list each, writing to their own `full/chunk_{0,1}/`
+subdirectory) to roughly halve the wall-clock time, then stopped early once 1,842 of the
+3,202 samples were done rather than waiting for the rest. Both chunks' output was reconciled
+into the single flat `full/` directory `predict_alphagenome_genexpr_full` itself would have
+produced:
 
 ```shell
 python src/scripts/merge_genexpr_full_chunks.py \
