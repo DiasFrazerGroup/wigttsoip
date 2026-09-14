@@ -13,7 +13,6 @@ dependencies:
   - htslib  # tabix, for indexing downloaded 1000 Genomes VCFs
   - biopython  # required by pyfaidx to read our bgzip GENCODE fasta (alphagenome.io.fasta.FastaExtractor)
   - duckdb  # subsetting across many batch_*.parquet files without loading them all into pandas
-  - scikit-learn  # GaussianMixture clustering of individuals by whole_score in notebooks/hbb.ipynb
   - ipykernel
   - nbconvert  # headless `jupyter nbconvert --execute` of notebooks/hbb.ipynb via the figures.smk rule
   - pip

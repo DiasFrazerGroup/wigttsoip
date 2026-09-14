@@ -72,13 +72,15 @@ path (`/users/diasfrazer/manglada/miniforge3/bin/snakemake`) rather than activat
   OOM is almost always removing the underlying memory blowup (see above), not just raising
   the number.
 - **Stale `.snakemake/incomplete/` markers after writing a Snakemake-declared output via an
-  out-of-DAG script.** Reconciling manually-split GPU work (see `README.md`'s "full 1MB /
-  3,202-sample personalized run" section) writes into a directory Snakemake itself didn't
-  create, so the next real Snakemake run raises `IncompleteFilesException` even though the
-  content is fine. `snakemake --cleanup-metadata <path>` is the documented fix, but if it
-  reports "metadata was not present" the real marker lives directly under
-  `.snakemake/incomplete/` as a base64-encoded filename - decode each with `echo <name> |
-  base64 -d` to confirm which path it corresponds to before deleting it directly.
+  out-of-DAG script.** Reconciling manually-split GPU work (e.g. merging hand-submitted
+  per-chunk `alphagenome_genexpr.py` runs back into `predict_alphagenome_genexpr_full`'s own
+  output directory via `src/scripts/merge_genexpr_full_chunks.py`) writes into a directory
+  Snakemake itself didn't create, so the next real Snakemake run raises
+  `IncompleteFilesException` even though the content is fine. `snakemake --cleanup-metadata
+  <path>` is the documented fix, but if it reports "metadata was not present" the real marker
+  lives directly under `.snakemake/incomplete/` as a base64-encoded filename - decode each with
+  `echo <name> | base64 -d` to confirm which path it corresponds to before deleting it
+  directly.
 - **Stale directory-wide `.snakemake/locks`.** All Snakefiles sharing one project root share
   one `.snakemake/` lock - a driver job that's still alive (even stuck forever polling a
   cluster sub-job that already died) blocks *every* Snakemake invocation against this repo,

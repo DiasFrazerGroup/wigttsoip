@@ -6,7 +6,7 @@ src/alphagenome
 *.nextflow*
 .DS_Store
 *ipynb_checkpoints*
-*snakemake*
+.snakemake/
 .done
 *.pyc
 *snakejob*
