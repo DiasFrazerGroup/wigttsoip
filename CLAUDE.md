@@ -31,8 +31,8 @@ OOM-killed on a step whose own rule asked for far more memory than the ad hoc ou
 `snakemake` itself lives in the `base` conda env, not this project's `wigttsoip` env (only
 individual rules, via `conda: "wigttsoip"` + `--use-conda`, run inside that env) - if you
 need to invoke it directly rather than through `submit_snakemake_slurm.sh`, use the full
-path (`/users/diasfrazer/manglada/miniforge3/bin/snakemake`) rather than activating
-`wigttsoip` first, or you'll get `snakemake: command not found`.
+path to the `base` env's binary (e.g. `$(conda info --base)/bin/snakemake`) rather than
+activating `wigttsoip` first, or you'll get `snakemake: command not found`.
 
 ## Cluster operational notes (lessons learned the hard way)
 

@@ -186,17 +186,11 @@ rule extract_hbb_wholeblood_variant_effects_long_full:
         gene_ids = ["ENSG00000244734"],  # HBB
         biosample_name = "venous blood",
     resources:
-        # The full window is ~2048 chunk files (1,048,576bp / 512bp chunk_size_bp) -
-        # each has fixed per-file overhead (open, decode obs/var string columns,
-        # np.unique), so this is now parallelized across `threads` processes (see
-        # --max-workers below) rather than the single 60min/8000MB serial run that
-        # previously TIMEOUT'd with zero progress output and MaxRSS already at 8.19GB
-        # (i.e. it was about to OOM too, not just slow). Peak memory is now bounded
-        # by chunks_per_batch (default 50) rather than the whole interval, since
-        # extract_to_batches() flushes+drops each batch of rows to its own
-        # zstd-compressed parquet file as soon as it's full, instead of accumulating
-        # every chunk's rows in memory for one final concat - so mem_mb no longer
-        # needs to scale with interval width.
+        # ~2048 chunk files (1,048,576bp / 512bp chunk_size_bp) - parallelized across
+        # `threads` (see --max-workers) instead of one serial process, which previously
+        # both timed out and was near-OOM. Peak memory is bounded by chunks_per_batch
+        # (default 50), not the whole interval, since extract_to_batches() flushes each
+        # full batch to its own parquet immediately.
         runtime = 30,
         mem_mb = 24000,
         gres = "none",
@@ -242,13 +236,10 @@ rule extract_allgenes_variant_effects_long_full:
         chunk_cache_dir = config["alphagenome_atlas"]["paths"]["chunk_cache"],
         biosample_name = "venous blood",
     resources:
-        # Keeping all 94 genes (vs. just HBB) means each chunk's row-explosion is up to
-        # ~94x bigger, especially in this gene-dense beta-globin-cluster region - the
-        # HBB-only version's 24000MB/32-workers OOM'd here; 128000MB/16-workers ran fine
-        # memory-wise but was on track for ~130min total (900/2049 chunks in ~58min) - the
-        # original 60min runtime would have killed it mid-write. 32 workers with this much
-        # memory headroom should roughly halve that, but runtime is set well above even
-        # the slower estimate as a safety margin.
+        # All 94 genes (not just HBB) means ~94x bigger row-explosion per chunk in this
+        # gene-dense region - HBB-only memory settings OOM'd here. 128000MB/32 workers
+        # gives headroom over the run that completed memory-safely at 16 workers; runtime
+        # kept generous as a margin.
         runtime = 150,
         mem_mb = 128000,
         gres = "none",

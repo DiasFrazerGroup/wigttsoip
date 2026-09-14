@@ -122,34 +122,16 @@ rule predict_alphagenome_genexpr_full:
         window_size = config["alphagenome_genexpr"]["full"]["window_size"],
         batch_size = config["alphagenome_genexpr"]["full"]["batch_size"],
     resources:
-        # Measured in production (job 28372308, 4 consecutive samples): a
-        # steady ~50s/sample on H100 for the full 1,048,576bp forward pass +
-        # official gene-mask scoring. 3202 samples * 50s ~= 44.5h (~1.85 days) -
-        # runtime below is a ~30% margin over that, not a guess at "how slow
-        # AlphaGenome is". No `threads`/many-CPU request: unlike a PyTorch
-        # DataLoader or parallel remote-API calls (see e.g.
-        # publication_variant_interpretation's enhancer_prediction.smk, which
-        # only bumps `threads` for those two cases), this script makes one
-        # serial predict_sequence() GPU call at a time, so extra CPU cores
-        # would sit idle - the single default thread matches that repo's own
-        # convention for pure local-GPU-forward-pass rules.
-        runtime = int(60*60),  # 60h ceiling, ~1.35x the measured 44.5h estimate
+        # ~50s/sample measured on H100 x 3202 samples ~= 44.5h; runtime below is a ~30%
+        # margin over that. Single-threaded: one serial predict_sequence() GPU call, so
+        # extra CPU cores would just idle.
+        runtime = int(60*60),
         mem_mb = 64000,
-        # sbatch (unlike salloc) requires an exact GPU type, not just "gpu:1".
-        # H100 (80GB) verified to comfortably fit a 1,048,576bp forward pass.
-        # This cluster's GresTypes name is "h100" (confirmed via sinfo -p
-        # gpu_diasfrazer -o "%P %G" and successful salloc/sbatch allocations) -
-        # NOT "nvidia_h100_80gb_hbm3" (that longer name is a different
-        # vocabulary used by this cluster's REST/accounting validator, not
-        # slurm.conf - publication_variant_interpretation's own GPU rules
-        # confirm this: their only "nvidia_..."-style GRES strings are in
-        # commented-out, abandoned rule variants).
+        # This cluster's GresTypes name is "h100" (per slurm.conf), not the longer
+        # "nvidia_h100_80gb_hbm3" some accounting tools use.
         gres = "gpu:h100:1",
         partition = "gpu_diasfrazer",
-        # No explicit qos: this cluster auto-derives QOS from the requested
-        # runtime (confirmed: requesting 2 days here previously auto-selected
-        # qos=vlong regardless of an explicit qos="marathon"), and
-        # publication_variant_interpretation's GPU rules never set qos either.
+        # No explicit qos: this cluster auto-derives it from the requested runtime.
     conda:
         "wigttsoip"
     retries: 3

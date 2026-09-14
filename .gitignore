@@ -3,7 +3,6 @@ scratch/*
 support/private/*
 # vendored (own git repo, editable-installed via `pip install -e ./src/alphagenome`)
 src/alphagenome
-*.nextflow*
 .DS_Store
 *ipynb_checkpoints*
 .snakemake/
@@ -11,12 +10,9 @@ src/alphagenome
 *.pyc
 *snakejob*
 *snakepipe*
-*.mcr
 *.private*
-Rplots.pdf
 *.egg-info*
 slurm-*
-*wandb*
 ._*
 
 # generated pipeline outputs and scratch data - reproducible via Snakemake, too large/volatile to track

@@ -403,14 +403,11 @@ def main(
             chunk_cache_dir,
         )
 
-        # No merge: for a wide interval, concatenating every chunk into one
-        # anndata (let alone writing it out) is itself a multi-hundred-GB,
-        # very slow operation - and unnecessary, since each chunk is already
-        # a queryable, self-contained h5ad. Downstream code should read only
-        # the chunks it needs (see extract_alphagenome_atlas_genexpr.py) via
-        # grid_chunks() over its own region/gene of interest, rather than
-        # loading the whole window at once. `output` is just an empty marker
-        # (inside chunk_cache_dir) recording that this interval is fully cached.
+        # No merge: concatenating every chunk into one anndata would itself be a
+        # multi-hundred-GB, slow operation, and is unnecessary since each chunk is
+        # already self-contained (read only what's needed via grid_chunks() in
+        # extract_alphagenome_atlas_genexpr.py). `output` is just an empty marker
+        # that this interval is fully cached.
         output.touch()
         print(
             f"Touched {output} ({len(chunk_files)} chunks cached in {chunk_cache_dir})",

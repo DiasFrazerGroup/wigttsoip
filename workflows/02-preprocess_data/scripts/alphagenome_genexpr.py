@@ -194,13 +194,9 @@ def main(
         for sample in batch_samples:
             snvs = load_sample_snvs(vcf_path, chromosome, start, end, sample)
             personal_seq = build_personal_sequence(ref_seq, start, snvs)
-            # NOTE: pos here is pysam's 0-based rec.start (correct for the 0-based
-            # sequence-splicing math above). This label is intentionally left 0-based,
-            # NOT AlphaGenome Atlas's 1-based convention (standard VCF POS) - see
-            # summarize_whole_vs_sum_parts.py, which converts when joining against
-            # Atlas instead of changing this label, so every batch_*.parquet already
-            # written by the (expensive, GPU-hours-costly) full run stays consistent
-            # with every batch written from now on.
+            # NOTE: pos is pysam's 0-based rec.start, intentionally NOT Atlas's 1-based
+            # convention - summarize_whole_vs_sum_parts.py converts at join time instead,
+            # so already-written batch_*.parquet stay consistent with future ones.
             variant_str = ";".join(f"{chromosome}:{pos}:{ref}>{alt}" for pos, ref, alt in snvs)
 
             print(f"[{sample}] {len(snvs)} SNVs in window, scoring...", flush=True)

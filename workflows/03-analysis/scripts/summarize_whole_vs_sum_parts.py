@@ -1,24 +1,11 @@
-"""Join, per sample, gene, and track, the model's predicted effect of an individual's whole
-combination of HBB-window SNVs (genexpr_personalized, "whole_score") against the sum of
-those same SNVs' own single-variant Atlas effects (alphagenome_atlas, "sum_parts_score") -
-the additive/no-epistasis null. Keyed by gene_id too (not just sample/track): a variant can
-score differently against different nearby genes, so when singles/combined cover more than
-one gene (see the allgenes_* config paths), the join must match each combined row's own
-gene_id, not just its track - for the HBB-only paths this is a no-op (single gene_id value).
+"""Join, per sample/gene/track, an individual's combined-variant effect (genexpr_personalized,
+"whole_score") against the sum of their own variants' single-variant Atlas effects
+("sum_parts_score") - the additive/no-epistasis null. Keyed by gene_id too, since a variant can
+score differently against different nearby genes (for the HBB-only paths this is a no-op).
 
-A track is identified by track_name; per alphagenome.models.variant_scorers.tidy_anndata's
-own docstring, (track_name, track_strand) is the minimal key that uniquely identifies a
-track in general - e.g. some biosamples have two distinct "polyA plus RNA-seq" tracks (one
-strand='.', one strand='-'). The join below matches on track_name ALONE (not also
-track_strand) as a defensive default: for the GTEx whole blood polyA track used here, both
-Atlas's singles table and alphagenome_genexpr.py's personalized-sequence model agree on
-strand='.' (confirmed directly), so this doesn't currently collapse anything that should
-have stayed distinct - but track_name alone is kept as the join key rather than reintroducing
-a track_strand equality check, since Atlas's singles table never has more than one
-track_strand value per track_name (so this can't create spurious duplicate matches via
-fan-out either way). Output keeps combined's own track_strand value (not singles'), since
-that's the one meaningful for match_gene_strand filtering. No averaging across duplicate
-(sample, track) rows otherwise: each output row is one real track's whole_score/sum_parts_score pair.
+Joins on track_name alone (not also track_strand): Atlas's singles table never has more than
+one track_strand per track_name, so this can't create duplicate-match fan-out. Output keeps
+combined's own track_strand (meaningful for match_gene_strand filtering), not singles'.
 n_variants vs n_variants_matched flags combinations with a variant outside the singles
 window/track set, where sum_parts_score would otherwise silently understate the true sum.
 """
@@ -127,12 +114,9 @@ def main(combined_path, singles_path, output, memory_limit_mb=None):
 
     con = duckdb.connect()
     if memory_limit_mb is not None:
-        # Match the SLURM job's own --mem request (see the rule's resources.mem_mb) so
-        # duckdb's buffer manager caps itself and spills/errors gracefully instead of the
-        # whole exploded-variant join getting OS OOM-killed (as happened on the full-scale
-        # run before this was wired in - the UNNEST explosion over the full 1Mb window's
-        # per-sample variant lists is what actually needs the memory, not the final
-        # row counts, which stay modest).
+        # Match the rule's own resources.mem_mb so duckdb spills/errors gracefully instead
+        # of OOMing on the exploded-variant join (the UNNEST fan-out needs the memory, not
+        # the final row counts).
         con.execute(f"SET memory_limit = '{int(memory_limit_mb)}MB'")
 
     # duckdb's COPY ... TO doesn't support parameterizing the destination path via `?`
