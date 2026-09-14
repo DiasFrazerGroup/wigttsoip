@@ -126,6 +126,11 @@ alphagenome_genexpr:
     # scored every gene in gene_ids.txt via the official gene-mask scorer, so this is just
     # a re-subset of the same already-computed full/ batch directory, no new GPU compute.
     allgenes_full: "results/02-preprocess_data/alphagenome/hbb_window/allgenes_genexpr_personalized.full.parquet"
+    # One row per (gene_id, track): each gene's baseline reference-allele RNA_seq
+    # expression level (RNA_SEQ_ACTIVE gene-mask scorer, ref scored against itself - see
+    # scripts/ref_gene_expression.py) over the same full window/gene set as allgenes_full,
+    # for binning genes by baseline expression independent of any individual's variants.
+    ref_gene_expression_full: "results/02-preprocess_data/alphagenome/hbb_window/ref_gene_expression.full.parquet"
 
 # 03-analysis: does AlphaGenome predict combinations of variants (the personalized-sequence
 # forward pass above) to differ from the naive sum of each variant's own single-variant

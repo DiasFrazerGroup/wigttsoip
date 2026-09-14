@@ -174,6 +174,50 @@ rule predict_alphagenome_genexpr_full:
         """
 
 
+rule predict_ref_gene_expression_full:
+    """One-time reference-sequence forward pass (no per-sample looping) over the same full
+    1,048,576bp window/gene set as predict_alphagenome_genexpr_full, to get each gene's
+    baseline (reference-allele) RNA_seq expression level - never saved by that per-sample
+    rule, which only persists ref-vs-alt log-fold-change scores. Needed to bin genes by
+    baseline expression in notebooks/hbb.ipynb, independent of any individual's variants."""
+    input:
+        fasta = config["alphagenome_genexpr"]["fasta"],
+        gtf = config["alphagenome_genexpr"]["gene_annotation"],
+        weights = config["alphagenome_jax"]["paths"]["weights"],
+        gene_ids_file = config["alphagenome_genexpr"]["gene_ids"],
+    output:
+        config["alphagenome_genexpr"]["paths"]["ref_gene_expression_full"],
+    params:
+        chromosome = config["alphagenome_atlas"]["hbb_window"]["chromosome"],
+        tss = config["alphagenome_atlas"]["hbb_window"]["tss"],
+        window_size = config["alphagenome_genexpr"]["full"]["window_size"],
+    resources:
+        # A single forward pass over the full 1,048,576bp window, not 3,202 of them like
+        # predict_alphagenome_genexpr_full - minutes, not days - but still needs the same
+        # H100 (80GB) to fit the window at all (verified there).
+        runtime = 30,
+        mem_mb = 32000,
+        gres = "gpu:h100:1",
+        partition = "gpu_diasfrazer",
+        qos = "short",
+    conda:
+        "wigttsoip"
+    shell:
+        """
+        python workflows/02-preprocess_data/scripts/ref_gene_expression.py \
+            --fasta {input.fasta} \
+            --gtf {input.gtf} \
+            --weights-dir {input.weights} \
+            --gene-ids-file {input.gene_ids_file} \
+            --chromosome {params.chromosome} \
+            --tss {params.tss} \
+            --window-size {params.window_size} \
+            --output {output}
+
+        echo "Done!"
+        """
+
+
 rule subset_allgenes_genexpr_personalized_full:
     """Same as subset_hbb_wholeblood_genexpr_personalized_full, but keeping every gene (no
     --gene-name filter) - the GPU forward pass already scored every gene in gene_ids.txt via
